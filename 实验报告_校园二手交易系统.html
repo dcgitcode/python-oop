@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园二手交易系统 —— Python OOP 实验报告</title>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --card: #16213e;
+    --card2: #0f3460;
+    --accent: #00b4d8;
+    --teal: #2ec4b6;
+    --gold: #e9c46a;
+    --danger: #e76f51;
+    --text: #e0e1e6;
+    --muted: #8892b0;
+    --code-bg: #0d1117;
+    --border: #30363d;
+    --success: #2ea043;
+    --warn: #d29922;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--card), var(--card2));
+    padding: 24px 32px;
+    border-bottom: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .header h1 { font-size: 1.4rem; color: var(--accent); }
+  .header .subtitle { color: var(--muted); font-size: 0.85rem; }
+  .student-info { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+  .student-info input {
+    background: var(--code-bg); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 12px; border-radius: 6px;
+    font-size: 0.9rem; width: 140px;
+  }
+  .student-info input:focus { outline: none; border-color: var(--accent); }
+
+  /* Progress Bar */
+  .progress-wrap {
+    padding: 16px 32px; background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .progress-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; max-width: 750px; margin: 0 auto;
+  }
+  .progress-bar::after {
+    content: ''; position: absolute; top: 50%; left: 0; right: 0;
+    height: 3px; background: var(--border); z-index: 0;
+  }
+  .step {
+    position: relative; z-index: 1;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--border); color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 0.85rem;
+    transition: all 0.3s;
+  }
+  .step.done { background: var(--success); color: #fff; }
+  .step.active { background: var(--accent); color: #000; box-shadow: 0 0 16px rgba(0,180,216,0.4); }
+  .step-label { font-size: 0.7rem; color: var(--muted); margin-top: 4px; text-align: center; }
+  .step-group { display: flex; flex-direction: column; align-items: center; }
+
+  /* Main Layout */
+  .main {
+    display: flex; gap: 0; min-height: calc(100vh - 160px);
+    justify-content: center;
+    padding: 0 16px;
+  }
+  .stages-panel {
+    width: 100%; max-width: 750px;
+    padding: 24px 0;
+  }
+
+  /* Audit Panel */
+  .audit-panel {
+    width: 380px; background: var(--card); border-left: 2px solid var(--border);
+    padding: 16px; overflow-y: auto; max-height: calc(100vh - 160px);
+    display: none; flex-shrink: 0;
+  }
+  .audit-panel.show { display: block; }
+  .audit-panel h3 { color: var(--gold); font-size: 0.95rem; margin-bottom: 12px; }
+  .audit-empty { color: var(--muted); font-size: 0.8rem; text-align: center; padding: 40px 0; }
+
+  /* Stage Card */
+  .stage-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 20px;
+    transition: all 0.3s; overflow: hidden;
+  }
+  .stage-card.unlocked { border-color: var(--accent); }
+  .stage-card.done { border-color: var(--success); }
+
+  /* Locked placeholder */
+  .stage-locked {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 20px; color: var(--muted);
+  }
+  .stage-locked .lock-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .stage-locked .lock-text { font-size: 0.95rem; }
+  .stage-locked .lock-hint { font-size: 0.78rem; color: var(--border); margin-top: 6px; }
+
+  /* Unlocked body */
+  .stage-body { display: none; padding: 20px; }
+  .stage-card.unlocked .stage-body,
+  .stage-card.done .stage-body { display: block; }
+  .stage-card.unlocked .stage-locked,
+  .stage-card.done .stage-locked { display: none; }
+
+  .stage-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .stage-header h2 { font-size: 1.1rem; }
+  .stage-badge {
+    padding: 3px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;
+  }
+  .badge-locked { background: var(--border); color: var(--muted); }
+  .badge-unlocked { background: rgba(0,180,216,0.2); color: var(--accent); }
+  .badge-done { background: rgba(46,160,67,0.2); color: var(--success); }
+  .badge-warn { background: rgba(233,196,106,0.2); color: var(--gold); }
+
+  /* Requirements box */
+  .req-box {
+    background: var(--code-bg); border-radius: 8px;
+    padding: 16px; margin-bottom: 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .req-box h4 { color: var(--accent); margin-bottom: 8px; }
+  .req-box ul { padding-left: 20px; }
+  .req-box li { margin-bottom: 4px; font-size: 0.9rem; color: var(--text); line-height: 1.7; }
+  .req-box .code-inline {
+    background: rgba(255,255,255,0.1); padding: 1px 6px;
+    border-radius: 4px; font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+    font-size: 0.85rem; color: var(--teal);
+  }
+  .req-box .highlight { color: var(--gold); font-weight: bold; }
+  .req-box .tip { color: var(--muted); font-size: 0.8rem; margin-top: 8px; font-style: italic; }
+  .req-box .forbidden { color: var(--danger); font-weight: bold; }
+
+  /* Code Editor */
+  .editor-wrap { margin-bottom: 12px; }
+  .editor-wrap label {
+    display: block; color: var(--muted); font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+  .code-editor {
+    width: 100%; min-height: 180px; max-height: 500px; background: var(--code-bg);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 14px; font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+    font-size: 0.88rem; line-height: 1.55; resize: vertical;
+    tab-size: 4;
+  }
+  .code-editor:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 12px rgba(0,180,216,0.15); }
+  .code-editor:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Output textarea */
+  .output-editor {
+    width: 100%; min-height: 80px; max-height: 250px; background: #0a1628;
+    border: 1px dashed var(--border); border-radius: 8px;
+    color: var(--teal); padding: 12px 14px;
+    font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+    font-size: 0.82rem; line-height: 1.5; resize: vertical;
+  }
+  .output-editor:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 10px rgba(46,196,182,0.15); }
+  .output-editor:disabled { opacity: 0.5; cursor: not-allowed; }
+  .output-editor::placeholder { color: #3a506b; }
+
+  /* Image upload area */
+  .upload-area { margin-top: 8px; }
+  .upload-area .img-preview-wrap {
+    position: relative; display: inline-block; max-width: 100%;
+    margin-top: 8px;
+  }
+  .upload-area .img-preview-wrap img {
+    max-width: 100%; max-height: 220px; border-radius: 6px;
+    border: 1px solid var(--border); display: block;
+  }
+  .upload-area .img-remove-btn {
+    position: absolute; top: -6px; right: -6px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--danger); color: #fff; border: none;
+    font-size: 0.7rem; cursor: pointer; line-height: 22px; text-align: center;
+  }
+  .upload-area .img-remove-btn:hover { background: #c0392b; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    padding: 8px 20px; border-radius: 6px; border: none;
+    font-size: 0.9rem; cursor: pointer; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover:not(:disabled) { background: #0096b7; }
+  .btn-outline {
+    background: transparent; border: 1px solid var(--accent); color: var(--accent);
+  }
+  .btn-outline:hover:not(:disabled) { background: rgba(0,180,216,0.1); }
+  .btn-small { padding: 4px 12px; font-size: 0.78rem; }
+  .btn-reset {
+    background: transparent; border: 1px dashed var(--border); color: var(--muted);
+    font-size: 0.75rem; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  }
+  .btn-reset:hover { border-color: var(--danger); color: var(--danger); }
+  .btn-upload {
+    background: transparent; border: 1px dashed var(--teal); color: var(--teal);
+    font-size: 0.78rem; padding: 4px 12px; border-radius: 4px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-upload:hover { background: rgba(46,196,182,0.1); border-style: solid; }
+
+  /* AI Warning */
+  .ai-warning {
+    background: rgba(233,196,106,0.1); border: 1px solid var(--gold);
+    border-radius: 8px; padding: 12px 16px; margin-top: 12px;
+    display: none;
+  }
+  .ai-warning.show { display: block; }
+  .ai-warning .warn-title { color: var(--gold); font-weight: bold; margin-bottom: 6px; }
+  .ai-warning .warn-item { color: var(--muted); font-size: 0.8rem; margin: 2px 0; }
+
+  /* Timing display */
+  .timer { color: var(--muted); font-size: 0.75rem; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 30px; right: 30px;
+    background: var(--success); color: #fff; padding: 12px 24px;
+    border-radius: 8px; font-weight: 600; z-index: 999;
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.5s forwards;
+  }
+  @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .main { flex-direction: column; }
+    .stages-panel { max-width: 100%; }
+    .audit-panel { width: 100%; border-left: none; border-top: 2px solid var(--border); }
+    .header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <h1>🏫 校园二手交易系统</h1>
+    <div class="subtitle">Python 面向对象编程 · 实验报告</div>
+  </div>
+  <div class="student-info">
+    <input id="inputClass" placeholder="班级" onchange="saveInfo()">
+    <input id="inputId" placeholder="学号" onchange="saveInfo()">
+    <input id="inputName" placeholder="姓名" onchange="saveInfo()">
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap">
+  <div class="progress-bar">
+    <div class="step-group"><div class="step active" id="step1">1</div><div class="step-label">Product类骨架</div></div>
+    <div class="step-group"><div class="step" id="step2">2</div><div class="step-label">Product完整实现</div></div>
+    <div class="step-group"><div class="step" id="step3">3</div><div class="step-label">ProductList骨架</div></div>
+    <div class="step-group"><div class="step" id="step4">4</div><div class="step-label">综合测试</div></div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- ====== Stages ====== -->
+  <div class="stages-panel" id="stagesPanel">
+
+    <!-- ============ STAGE 1 ============ -->
+    <div class="stage-card unlocked" id="card1">
+      <div class="stage-locked">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-text">请先完成上一阶段</div>
+      </div>
+      <div class="stage-body">
+        <div class="stage-header">
+          <h2>📝 第一阶段：Product 类骨架</h2>
+          <span class="stage-badge badge-unlocked" id="badge1">进行中</span>
+        </div>
+
+        <!-- 场景引入 -->
+        <div class="req-box">
+          <h4>🎯 场景</h4>
+          <p style="font-size:0.9rem;color:var(--text);margin-bottom:8px">
+            学校二手群里每天都有人发闲置物品信息，但是内容格式乱七八糟——有人不标价格、有人忘了写联系方式。
+            现在需要设计一个 <span class="code-inline">Product</span> 类，作为「商品档案卡」的模板。
+          </p>
+        </div>
+
+        <!-- 需求 -->
+        <div class="req-box">
+          <h4>📋 你需要完成的代码</h4>
+          <ul>
+            <li><b>类名</b>：<span class="code-inline">Product</span></li>
+            <li>
+              <b>属性</b>（<span class="code-inline">__init__</span> 里初始化）：
+              <ul style="margin-top:4px;padding-left:18px">
+                <li><span class="code-inline">name</span> —— 商品名（字符串），比如 <code>"二手Python课本"</code></li>
+                <li><span class="code-inline">price</span> —— 价格（数字），<span class="highlight">如果 ≤ 0，默认设为 0.01</span>，不报错</li>
+                <li><span class="code-inline">seller</span> —— 卖家姓名（字符串），比如 <code>"你的名字"</code></li>
+                <li><span class="code-inline">status</span> —— 状态，<span class="highlight">默认值为 <code>"在售"</code></span></li>
+              </ul>
+            </li>
+            <li>
+              <b>方法1</b>：<span class="code-inline">__str__(self)</span>
+              <br>→ 返回字符串，格式为：<code>【在售】商品名 | ¥价格 | 卖家：XXX</code>
+              <br>→ 示例：<code>【在售】蓝牙耳机 | ¥89 | 卖家：小明</code>
+            </li>
+            <li>
+              <b>方法2</b>：<span class="code-inline">is_expensive(self, threshold=500)</span>
+              <br>→ 如果 price ≥ threshold，返回 <code>"高价商品"</code>
+              <br>→ 否则返回 <code>"平价商品"</code>
+            </li>
+            <li>
+              <b>方法3</b>：<span class="code-inline">mark_sold(self)</span>
+              <br>→ 把 status 改成 <code>"已售"</code>
+              <br>→ 打印一行提示：<code>商品 XXX 已标记为已售</code>
+            </li>
+          </ul>
+          <div class="tip">💡 提示：这个阶段先写出方法签名和 pass，不着急写完整逻辑。</div>
+        </div>
+
+        <div class="editor-wrap">
+          <label>👇 在下方编写代码（先写方法签名 + pass 即可）</label>
+          <textarea class="code-editor" id="editor1"
+            placeholder="class Product:&#10;    def __init__(self, name, price, seller):&#10;        pass&#10;&#10;    def __str__(self):&#10;        pass&#10;&#10;    def is_expensive(self, threshold=500):&#10;        pass&#10;&#10;    def mark_sold(self):&#10;        pass&#10;"
+            oninput="autoSave(1)"></textarea>
+        </div>
+        <div class="ai-warning" id="warn1"></div>
+        <div class="btn-row">
+          <span class="timer" id="timer1">⏱ 00:00</span>
+          <span style="flex:1"></span>
+          <button class="btn btn-primary" onclick="submitStage(1)">提交本阶段 → 解锁下一阶段</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STAGE 2 ============ -->
+    <div class="stage-card" id="card2">
+      <div class="stage-locked">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-text">请先完成第一阶段再查看</div>
+        <div class="lock-hint">提交第一阶段的代码框架后，本阶段自动解锁</div>
+      </div>
+      <div class="stage-body">
+        <div class="stage-header">
+          <h2>✅ 第二阶段：完善 Product 类 + 测试</h2>
+          <span class="stage-badge badge-locked" id="badge2">等待解锁</span>
+        </div>
+
+        <div class="req-box">
+          <h4>🎯 任务</h4>
+          <p style="font-size:0.9rem;color:var(--text);margin-bottom:8px">
+            上一步你写好了 Product 类的方法签名，现在把每个方法补充完整，
+            并在底部写出测试代码，验证你的类是否工作正常。
+          </p>
+        </div>
+
+        <div class="req-box">
+          <h4>📋 要做什么</h4>
+          <ul>
+            <li>把第一阶段 4 个方法全部写出完整逻辑（不能再有 pass）</li>
+            <li>在文件底部加上 <span class="code-inline">if __name__ == "__main__":</span> 测试代码：</li>
+            <li>① 用 <span class="highlight">你自己真实想卖的闲置物品</span> 创建一个 Product 对象</li>
+            <li>② 调用 <span class="code-inline">is_expensive()</span>，打印返回值</li>
+            <li>③ 调用 <span class="code-inline">mark_sold()</span></li>
+            <li>④ <span class="code-inline">print(p1)</span>，确认状态已变成「已售」</li>
+          </ul>
+          <div class="tip">💡 如果运行结果没问题，点击"提交"进入下一阶段。</div>
+          <div class="tip forbidden">🚫 不允许用"商品A""测试""test"之类的占位名，要用真实物品！</div>
+        </div>
+
+        <div class="editor-wrap">
+          <label>👇 在下方编写完整代码（包含 Product 类 + 测试代码）</label>
+          <textarea class="code-editor" id="editor2"
+            placeholder="# 第一阶段代码 + if __name__ == '__main__' 测试&#10;"
+            oninput="autoSave(2)" disabled></textarea>
+        </div>
+        <div class="editor-wrap">
+          <label>🖥 请粘贴运行结果（Pycharm/终端里运行后，把输出复制到这里）</label>
+          <textarea class="output-editor" id="output2"
+            placeholder="请在此粘贴你运行代码后的输出结果，例如：&#10;高价商品&#10;商品 蓝牙耳机 已标记为已售&#10;【已售】蓝牙耳机 | ¥89 | 卖家：小明&#10;"
+            oninput="autoSaveOutput(2)"></textarea>
+        </div>
+        <div class="upload-area">
+          <input type="file" accept="image/*" id="imgInput2" style="display:none" onchange="handleImageUpload(2)">
+          <button class="btn-upload" onclick="document.getElementById('imgInput2').click()">📎 或上传运行截图</button>
+          <div class="img-preview-wrap" id="imgPreview2" style="display:none">
+            <button class="img-remove-btn" onclick="removeImage(2)">✕</button>
+            <img id="img2" alt="运行截图">
+          </div>
+        </div>
+        <div class="ai-warning" id="warn2"></div>
+        <div class="btn-row">
+          <span class="timer" id="timer2">⏱ --:--</span>
+          <span style="flex:1"></span>
+          <button class="btn btn-primary" id="btn2" onclick="submitStage(2)" disabled>提交本阶段 → 解锁下一阶段</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STAGE 3 ============ -->
+    <div class="stage-card" id="card3">
+      <div class="stage-locked">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-text">请先完成第二阶段再查看</div>
+        <div class="lock-hint">完成 Product 类的完整实现后提交，本阶段自动解锁</div>
+      </div>
+      <div class="stage-body">
+        <div class="stage-header">
+          <h2>📦 第三阶段：ProductList 类骨架</h2>
+          <span class="stage-badge badge-locked" id="badge3">等待解锁</span>
+        </div>
+
+        <div class="req-box">
+          <h4>🎯 场景</h4>
+          <p style="font-size:0.9rem;color:var(--text);margin-bottom:8px">
+            单个商品的档案卡做好了，但现在二手群里有几十件商品，
+            需要一个「管理系统」来批量管理它们。
+            请设计 <span class="code-inline">ProductList</span> 类。
+          </p>
+        </div>
+
+        <div class="req-box">
+          <h4>📋 你需要完成的代码</h4>
+          <ul>
+            <li><b>类名</b>：<span class="code-inline">ProductList</span></li>
+            <li><b>属性</b>：<span class="code-inline">products</span> —— 一个列表，存放 Product 对象</li>
+            <li>
+              <b>方法1</b>：<span class="code-inline">add_product(self, product)</span> 追加
+              <br>→ 遍历 products，如果已存在 <span class="highlight">同名且同卖家</span> 的商品，打印提示「已存在」并不添加
+              <br>→ 否则追加到列表末尾
+            </li>
+            <li>
+              <b>方法2</b>：<span class="code-inline">remove_by_name(self, name)</span> 删除
+              <br>→ 按商品名删除，可能有多个同名但要全部删掉
+              <br>→ 最后打印：<code>已删除 N 件商品</code>
+            </li>
+            <li>
+              <b>方法3</b>：<span class="code-inline">update_product(self, name, seller, new_price=None, new_status=None)</span> 修改
+              <br>→ 按照 <span class="highlight">商品名 + 卖家</span> 两个条件定位商品（同名可能有不同卖家）
+              <br>→ new_price 不为 None 时修改价格
+              <br>→ new_status 不为 None 时修改状态
+              <br>→ 找不到时打印：<code>未找到该商品</code>
+            </li>
+            <li>
+              <b>方法4</b>：<span class="code-inline">search_by_keyword(self, keyword)</span> 查询
+              <br>→ 按关键字搜索商品名（<span class="highlight">不区分大小写</span>）
+              <br>→ 返回符合条件的 Product 对象列表
+            </li>
+          </ul>
+          <div class="tip">💡 这个阶段同样先写方法签名 + pass，第四阶段再补充完整。</div>
+        </div>
+
+        <div class="editor-wrap">
+          <label>👇 在下方编写 ProductList 类代码骨架</label>
+          <textarea class="code-editor" id="editor3"
+            placeholder="class ProductList:&#10;    def __init__(self):&#10;        pass&#10;&#10;    def add_product(self, product):&#10;        pass&#10;    &#10;    def remove_by_name(self, name):&#10;        pass&#10;&#10;    def update_product(self, name, seller, new_price=None, new_status=None):&#10;        pass&#10;&#10;    def search_by_keyword(self, keyword):&#10;        pass&#10;"
+            oninput="autoSave(3)" disabled></textarea>
+        </div>
+        <div class="ai-warning" id="warn3"></div>
+        <div class="btn-row">
+          <span class="timer" id="timer3">⏱ --:--</span>
+          <span style="flex:1"></span>
+          <button class="btn btn-primary" id="btn3" onclick="submitStage(3)" disabled>提交本阶段 → 解锁下一阶段</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ STAGE 4 ============ -->
+    <div class="stage-card" id="card4">
+      <div class="stage-locked">
+        <div class="lock-icon">🔒</div>
+        <div class="lock-text">请先完成第三阶段再查看</div>
+        <div class="lock-hint">完成 ProductList 类骨架后提交，本阶段自动解锁</div>
+      </div>
+      <div class="stage-body">
+        <div class="stage-header">
+          <h2>🚀 第四阶段：完善 ProductList + 综合测试</h2>
+          <span class="stage-badge badge-locked" id="badge4">等待解锁</span>
+        </div>
+
+        <div class="req-box">
+          <h4>🎯 任务</h4>
+          <p style="font-size:0.9rem;color:var(--text);margin-bottom:8px">
+            最后一步！把第三阶段的 4 个方法补充完整，再加 2 个新方法，然后写出综合测试。
+          </p>
+        </div>
+
+        <div class="req-box">
+          <h4>📋 要做什么</h4>
+          <ul>
+            <li>把第三阶段 4 个方法全部写出完整逻辑</li>
+            <li>
+              <b>新增方法5</b>：<span class="code-inline">show_all(self)</span> —— 打印全部商品：
+              <pre style="background:rgba(0,0,0,0.3);padding:6px 12px;border-radius:4px;margin:4px 0;color:var(--teal);font-size:0.82rem">===== 全部商品（共N件）=====
+【在售】蓝牙耳机 | ¥89 | 卖家：小明
+【已售】课本 | ¥50 | 卖家：小红
+=============================</pre>
+            </li>
+            <li>
+              <b>新增方法6</b>：<span class="code-inline">count_by_status(self, status)</span>
+              <br>→ 遍历 products，统计指定状态的商品数量
+            </li>
+            <li>
+              ⭐ <b>拓展加分</b>：<span class="code-inline">search_by_price_range(self, min_price, max_price)</span>
+              <br>→ 返回价格在 [min, max] 区间内的商品列表
+            </li>
+          </ul>
+        </div>
+
+        <div class="req-box">
+          <h4>🧪 综合测试要求（在 if __name__ == "__main__" 里写）</h4>
+          <ul>
+            <li>① 创建 <span class="highlight">至少 4 个 Product 对象</span>：至少 1 个是你真实闲置，其余用同学的名字当卖家</li>
+            <li>② 全部添加到 ProductList → 调用 <span class="code-inline">show_all()</span></li>
+            <li>③ 调用 <span class="code-inline">search_by_keyword("耳机")</span> 并打印结果</li>
+            <li>④ 调用 <span class="code-inline">update_product()</span> 修改某个商品的价格</li>
+            <li>⑤ 再次 <span class="code-inline">show_all()</span> 确认修改成功</li>
+            <li>⑥ 调用 <span class="code-inline">count_by_status("在售")</span> 并打印</li>
+          </ul>
+          <div class="tip forbidden">🚫 商品名和卖家名禁止用占位符（商品A、张三、test 等）！</div>
+        </div>
+
+        <div class="editor-wrap">
+          <label>👇 在下方编写完整代码（Product + ProductList + 综合测试）</label>
+          <textarea class="code-editor" id="editor4"
+            placeholder="# 完整的 Product + ProductList + 综合测试代码&#10;"
+            oninput="autoSave(4)" disabled></textarea>
+        </div>
+        <div class="editor-wrap">
+          <label>🖥 请粘贴综合运行结果（Pycharm/终端里运行后，把完整输出复制到这里）</label>
+          <textarea class="output-editor" id="output4"
+            placeholder="请在此粘贴你运行综合测试后的完整输出结果，需包含 show_all()、search_by_keyword()、update_product()、count_by_status() 的结果&#10;"
+            oninput="autoSaveOutput(4)"></textarea>
+        </div>
+        <div class="upload-area">
+          <input type="file" accept="image/*" id="imgInput4" style="display:none" onchange="handleImageUpload(4)">
+          <button class="btn-upload" onclick="document.getElementById('imgInput4').click()">📎 或上传运行截图</button>
+          <div class="img-preview-wrap" id="imgPreview4" style="display:none">
+            <button class="img-remove-btn" onclick="removeImage(4)">✕</button>
+            <img id="img4" alt="运行截图">
+          </div>
+        </div>
+        <div class="ai-warning" id="warn4"></div>
+        <div class="btn-row">
+          <span class="timer" id="timer4">⏱ --:--</span>
+          <span style="flex:1"></span>
+          <button class="btn btn-primary" id="btn4" onclick="submitStage(4)" disabled>提交并完成实验</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset and Export buttons at bottom -->
+    <div style="text-align:center;margin-top:24px;padding-bottom:40px">
+      <button class="btn btn-outline" style="margin-right:12px" onclick="exportImage(this)">📸 导出为图片</button>
+      <button class="btn-reset" onclick="resetAll()">🔄 重置所有数据（重新开始）</button>
+      <div style="color:var(--muted);font-size:0.7rem;margin-top:4px">所有代码自动保存在浏览器本地，关闭网页不会丢失</div>
+    </div>
+  </div>
+
+  <!-- ====== Audit Panel ====== -->
+  <div class="audit-panel" id="auditPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3>🔍 教师审计面板</h3>
+      <button class="btn btn-small btn-outline" onclick="toggleAudit()">✕</button>
+    </div>
+    <div id="auditContent">
+      <div class="audit-empty">尚无提交记录</div>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <button class="btn btn-outline btn-small" onclick="exportReport()">📄 导出检测报告</button>
+    </div>
+  </div>
+</div>
+
+<!-- Audit toggle -->
+<button id="auditToggle" style="position:fixed;bottom:20px;left:20px;z-index:100;
+  background:var(--card2);color:var(--accent);border:1px solid var(--accent);
+  padding:8px 16px;border-radius:20px;cursor:pointer;font-size:0.8rem;font-weight:bold"
+  onclick="toggleAudit()">🔍 教师审计</button>
+
+<script>
+// ============================================================
+// State
+// ============================================================
+const KEY = 'py_product_training_v6';
+// Minimum expected coding time per phase (seconds). 实验报告每个阶段
+// 手写代码需要一定时间，明显低于阈值说明可能提前用 AI 生成好了
+const MIN_TIME = { 1: 420, 2: 300, 3: 420, 4: 480 };
+// Cross-phase similarity threshold: if >80% identical, likely copied from previous phase
+const SIM_THRESHOLD = 0.80;
+
+let state = {
+  cls: '', id: '', name: '',
+  cur: 1,    // current stage number
+  stg: {     // stage data
+    1: { done: false, code: '', output: '', outputImage: null, flags: [], ts: 0, start: null },
+    2: { done: false, code: '', output: '', outputImage: null, flags: [], ts: 0, start: null },
+    3: { done: false, code: '', output: '', outputImage: null, flags: [], ts: 0, start: null },
+    4: { done: false, code: '', output: '', outputImage: null, flags: [], ts: 0, start: null },
+  }
+};
+let tmr = {};
+
+function load() {
+  const raw = localStorage.getItem(KEY);
+  if (raw) {
+    try {
+      const s = JSON.parse(raw);
+      state = { ...state, ...s };
+      for (let i = 1; i <= 4; i++) {
+        if (!state.stg[i]) state.stg[i] = { done: false, code: '', output: '', outputImage: null, flags: [], ts: 0, start: null };
+        if (!state.stg[i].output) state.stg[i].output = '';
+        if (state.stg[i].outputImage === undefined) state.stg[i].outputImage = null;
+      }
+    } catch(e) {}
+  }
+  document.getElementById('inputClass').value = state.cls;
+  document.getElementById('inputId').value = state.id;
+  document.getElementById('inputName').value = state.name;
+  for (let i = 1; i <= 4; i++) {
+    const ed = document.getElementById('editor' + i);
+    if (ed && state.stg[i].code) ed.value = state.stg[i].code;
+    const out = document.getElementById('output' + i);
+    if (out && state.stg[i].output) out.value = state.stg[i].output;
+    // Restore uploaded images
+    if (state.stg[i].outputImage) renderImagePreview(i, state.stg[i].outputImage);
+  }
+  for (let i = 1; i <= state.cur && i <= 4; i++) unlock(i);
+  for (let i = 1; i <= 4; i++) {
+    if (state.stg[i].done) { done(i); showWarn(i, state.stg[i].flags); }
+  }
+  if (!state.stg[state.cur].done && !state.stg[state.cur].start) startT(state.cur);
+  progress();
+  audit();
+}
+
+function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function saveInfo() {
+  state.cls = document.getElementById('inputClass').value;
+  state.id = document.getElementById('inputId').value;
+  state.name = document.getElementById('inputName').value;
+  save();
+}
+function autoSave(n) {
+  state.stg[n].code = document.getElementById('editor' + n).value;
+  save();
+}
+function autoSaveOutput(n) {
+  const el = document.getElementById('output' + n);
+  if (el) { state.stg[n].output = el.value; save(); }
+}
+
+// ============================================================
+// Image upload for run results
+// ============================================================
+function handleImageUpload(n) {
+  const input = document.getElementById('imgInput' + n);
+  const file = input.files[0];
+  if (!file) return;
+
+  // Check size (max 3MB per image)
+  if (file.size > 3 * 1024 * 1024) {
+    toast('⚠ 图片太大（超过 3MB），请压缩后重新上传');
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    // Check total localStorage usage
+    const estimated = JSON.stringify(dataUrl).length;
+    if (estimated > 2 * 1024 * 1024) {
+      toast('⚠ 图片较大，可能影响保存速度，建议压缩后再上传');
+    }
+    try {
+      state.stg[n].outputImage = dataUrl;
+      save(); // may throw if localStorage full
+      renderImagePreview(n, dataUrl);
+    } catch (storageErr) {
+      // localStorage quota exceeded - keep image in memory only
+      state.stg[n].outputImage = dataUrl;
+      renderImagePreview(n, dataUrl);
+      toast('⚠ 存储空间不足，图片仅在当前会话有效，关闭网页后会丢失');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(n) {
+  state.stg[n].outputImage = null;
+  save();
+  const preview = document.getElementById('imgPreview' + n);
+  if (preview) preview.style.display = 'none';
+  const img = document.getElementById('img' + n);
+  if (img) img.src = '';
+  const input = document.getElementById('imgInput' + n);
+  if (input) input.value = '';
+}
+
+function renderImagePreview(n, dataUrl) {
+  const preview = document.getElementById('imgPreview' + n);
+  const img = document.getElementById('img' + n);
+  if (preview) preview.style.display = 'inline-block';
+  if (img) img.src = dataUrl;
+}
+
+// ============================================================
+// Stage UI
+// ============================================================
+function unlock(n) {
+  const c = document.getElementById('card' + n);
+  const e = document.getElementById('editor' + n);
+  const b = document.getElementById('btn' + n);
+  const bg = document.getElementById('badge' + n);
+  c.classList.add('unlocked');
+  if (e) e.disabled = false;
+  if (b) b.disabled = false;
+  if (bg) { bg.textContent = '待提交'; bg.className = 'stage-badge badge-unlocked'; }
+}
+
+function done(n) {
+  const c = document.getElementById('card' + n);
+  const bg = document.getElementById('badge' + n);
+  c.classList.add('done');
+  if (bg) { bg.textContent = '已完成'; bg.className = 'stage-badge badge-done'; }
+  const st = document.getElementById('step' + n);
+  if (st) { st.classList.add('done'); st.classList.remove('active'); }
+}
+
+function progress() {
+  for (let i = 1; i <= 4; i++) {
+    const st = document.getElementById('step' + i);
+    st.classList.remove('done', 'active');
+    if (state.stg[i].done) st.classList.add('done');
+    else if (i === state.cur) st.classList.add('active');
+  }
+}
+
+// ============================================================
+// Timer
+// ============================================================
+function startT(n) {
+  state.stg[n].start = Date.now();
+  save();
+  tick(n);
+  tmr[n] = setInterval(() => tick(n), 1000);
+}
+function tick(n) {
+  const el = document.getElementById('timer' + n);
+  if (!el) return;
+  const e = state.stg[n].start ? Math.floor((Date.now() - state.stg[n].start) / 1000) : 0;
+  el.textContent = `⏱ ${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;
+}
+function stopT(n) {
+  if (tmr[n]) { clearInterval(tmr[n]); delete tmr[n]; }
+  if (state.stg[n].start) {
+    state.stg[n].ts = Math.floor((Date.now() - state.stg[n].start) / 1000);
+    state.stg[n].start = null;
+  }
+}
+
+// ============================================================
+// Cross-phase code similarity (Levenshtein ratio)
+// ============================================================
+function similarity(a, b) {
+  if (!a || !b) return 0;
+  const la = a.length, lb = b.length;
+  if (la === 0 && lb === 0) return 1;
+  if (la === 0 || lb === 0) return 0;
+
+  // Use a memory-efficient single-row Levenshtein
+  let prev = new Uint16Array(lb + 1);
+  let curr = new Uint16Array(lb + 1);
+  for (let j = 0; j <= lb; j++) prev[j] = j;
+
+  for (let i = 1; i <= la; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= lb; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  const dist = prev[lb];
+  return 1 - dist / Math.max(la, lb);
+}
+
+// ============================================================
+// Anti-AI Detection
+// ============================================================
+function detectAI(n, code) {
+  const flags = [];
+
+  // ── 1. Time check: submitted too fast ──
+  const elapsed = state.stg[n].ts; // seconds
+  const min = MIN_TIME[n] || 300;
+  if (elapsed > 0 && elapsed < min) {
+    const elapsedMin = Math.floor(elapsed / 60);
+    const minMin = Math.floor(min / 60);
+    flags.push(`⏱ 用时 ${elapsedMin} 分钟（预期 ≥${minMin} 分钟），提交过快，疑似提前准备好代码`);
+  }
+
+  // ── 2. Cross-phase similarity: same code across phases ──
+  for (let i = 1; i < n; i++) {
+    const prevCode = state.stg[i].code;
+    if (!prevCode) continue;
+    const sim = similarity(code, prevCode);
+    if (sim >= SIM_THRESHOLD) {
+      const pct = Math.round(sim * 100);
+      flags.push(`🔄 与阶段${i}代码相似度 ${pct}%，疑似复制粘贴了同一份代码`);
+      break; // one match is enough
+    }
+  }
+
+  // ── 3. __repr__ — 需求里没有，AI 爱写 ──
+  if (/def __repr__/.test(code)) {
+    flags.push('使用了 __repr__ 方法（需求未要求），AI 常用此写法');
+  }
+
+  // ── 4. @property — 完全超出学生水平 ──
+  if (/@property\b/.test(code)) {
+    flags.push('使用了 @property 装饰器（需求未要求，课程尚未涉及），高度可疑');
+  }
+
+  // ── 5. @staticmethod / @classmethod     ──
+  if (/@(staticmethod|classmethod)\b/.test(code)) {
+    flags.push('使用了 @staticmethod / @classmethod 装饰器（课程未涉及）');
+  }
+
+  // ── 6. 占位名称 —— 最直接的证据 ──
+  const genericGoods = ['商品A','商品B','商品C','商品1','商品2','商品3','测试','test','Test','item1','item2'];
+  const genericNames = ['张三','李四','王五','赵六','小明','小红','小刚'];
+  let goodHits = 0, nameHits = 0;
+  genericGoods.forEach(g => { if (code.includes(g)) goodHits++; });
+  genericNames.forEach(g => { if (code.includes(g)) nameHits++; });
+  if (goodHits >= 1) flags.push('商品名称使用了占位符（如"商品A""测试"），未使用真实物品名');
+  if (nameHits >= 2) flags.push('卖家名使用了"张三""李四"等占位符，未使用真实同学名字');
+
+  // ── 7. 纯英文注释（中文课堂里写英文注释）───
+  const lines = code.split('\n');
+  const engComments = lines.filter(l => /^\s*#[a-zA-Z]/.test(l) && !/[\u4e00-\u9fff]/.test(l));
+  if (engComments.length >= 3) {
+    flags.push(`代码中有 ${engComments.length} 行全英文注释，中文课堂中不常见`);
+  }
+
+  return flags;
+}
+
+// ============================================================
+// Submit
+// ============================================================
+function submitStage(n) {
+  const code = document.getElementById('editor' + n).value.trim();
+  if (code.length < 20) {
+    toast('请至少写一些代码再提交！');
+    return;
+  }
+
+  stopT(n);
+  state.stg[n].code = code;
+
+  const flags = detectAI(n, code);
+  state.stg[n].flags = flags;
+
+  showWarn(n, flags);
+  state.stg[n].done = true;
+  done(n);
+
+  if (n < 4) {
+    state.cur = n + 1;
+    unlock(n + 1);
+    if (!state.stg[n + 1].start) startT(n + 1);
+  }
+
+  progress();
+  save();
+  audit();
+
+  const elapsed = state.stg[n].ts;
+  const elMin = Math.floor(elapsed / 60);
+  const elSec = elapsed % 60;
+  const timeStr = `用时 ${elMin}分${elSec}秒`;
+
+  if (n === 4) {
+    toast(`🎉 实验报告全部完成！${timeStr}，请举手找老师检查。`);
+  } else if (flags.length > 0) {
+    toast(`⚠ 阶段${n}完成（${timeStr}），检测到 ${flags.length} 个标记，下一阶段已解锁`);
+  } else {
+    toast(`✅ 阶段${n}完成（${timeStr}），下一阶段已解锁`);
+  }
+}
+
+function showWarn(n, flags) {
+  const el = document.getElementById('warn' + n);
+  if (!el) return;
+  if (flags.length === 0) { el.classList.remove('show'); return; }
+  el.innerHTML = `<div class="warn-title">⚠ 检测到 ${flags.length} 个可疑标记</div>` +
+    flags.map(f => `<div class="warn-item">❌ ${f}</div>`).join('');
+  el.classList.add('show');
+
+  const bg = document.getElementById('badge' + n);
+  if (bg) { bg.textContent = '⚠ 可疑'; bg.className = 'stage-badge badge-warn'; }
+}
+
+// ============================================================
+// Audit Panel
+// ============================================================
+function toggleAudit() {
+  document.getElementById('auditPanel').classList.toggle('show');
+}
+
+function audit() {
+  const ct = document.getElementById('auditContent');
+  let html = '', any = false;
+  for (let i = 1; i <= 4; i++) {
+    const s = state.stg[i];
+    if (!s.code && !s.done) continue;
+    any = true;
+    const risk = s.flags.length >= 2 ? '#d29922' : s.flags.length === 1 ? '#e9c46a' : '#2ea043';
+    const elMin = Math.floor(s.ts / 60);
+    const elSec = s.ts % 60;
+    const thMin = Math.floor((MIN_TIME[i] || 300) / 60);
+    const timeOK = s.ts >= (MIN_TIME[i] || 300);
+    const timeColor = timeOK ? '#2ea043' : '#e76f51';
+
+    // Cross-phase similarity info
+    let simInfo = '';
+    for (let j = 1; j < i; j++) {
+      const prev = state.stg[j].code;
+      if (!prev) continue;
+      const sim = similarity(s.code, prev);
+      const pct = Math.round(sim * 100);
+      simInfo += `<div style="color:${sim >= SIM_THRESHOLD * 100 ? '#e76f51' : 'var(--muted)'};font-size:0.7rem">vs 阶段${j}: ${pct}% 相似</div>`;
+    }
+
+    html += `<div style="background:var(--code-bg);border-radius:6px;padding:10px;margin-bottom:10px;border-left:3px solid ${risk}">
+      <div style="color:var(--accent);font-weight:bold;font-size:0.82rem">阶段${i}：${['Product骨架','Product完整','ProductList骨架','完整测试'][i-1]}</div>
+      <div style="color:var(--muted);font-size:0.72rem;margin:2px 0">
+        ⏱ 用时 <span style="color:${timeColor}">${elMin}分${elSec}秒</span>
+        （阈值 ≥${thMin}分钟）| 代码 ${(s.code||'').length} 字符
+      </div>
+      ${simInfo}
+      ${s.flags.length ? s.flags.map(f => `<div style="color:#e76f51;font-size:0.75rem;margin:1px 0">❌ ${f}</div>`).join('') : '<div style="color:#2ea043;font-size:0.75rem">✅ 无异常</div>'}
+      ${s.output ? `<div style="margin-top:6px;font-size:0.7rem;color:var(--muted)">🖥 运行结果: ${(s.output||'').length} 字符</div>` : ''}
+      ${s.outputImage ? '<div style="margin-top:4px;font-size:0.7rem;color:var(--teal)">📸 已上传运行截图</div>' : ''}
+      <button class="btn btn-small btn-outline" style="margin-top:4px" onclick="viewCode(${i})">查看代码</button>
+      ${s.output ? `<button class="btn btn-small btn-outline" style="margin-top:4px;margin-left:4px;border-color:var(--teal);color:var(--teal)" onclick="viewOutput(${i})">查看运行结果</button>` : ''}
+    </div>`;
+  }
+  ct.innerHTML = any ? html : '<div class="audit-empty">尚无提交记录</div>';
+}
+
+function viewCode(n) {
+  const code = state.stg[n].code;
+  if (!code) { toast('该阶段无代码'); return; }
+  const w = window.open('', '_blank', 'width=700,height=500');
+  w.document.write(`<pre style="background:#0d1117;color:#e0e1e6;padding:20px;font-family:Consolas,monospace;font-size:14px;white-space:pre-wrap;line-height:1.6">${code.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`);
+}
+
+function viewOutput(n) {
+  const output = state.stg[n].output;
+  if (!output) { toast('该阶段无运行结果'); return; }
+  const w = window.open('', '_blank', 'width=700,height=400');
+  w.document.write(`<pre style="background:#0a1628;color:#2ec4b6;padding:20px;font-family:Consolas,monospace;font-size:14px;white-space:pre-wrap;line-height:1.6">${output.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`);
+}
+
+function exportReport() {
+  let rpt = `校园二手交易系统 实验报告\n`;
+  rpt += `==============================\n`;
+  rpt += `班级: ${state.cls}  学号: ${state.id}  姓名: ${state.name}\n\n`;
+  let total = 0;
+  for (let i = 1; i <= 4; i++) {
+    const s = state.stg[i];
+    if (!s.code && !s.done) continue;
+    const elMin = Math.floor(s.ts / 60);
+    const elSec = s.ts % 60;
+    const thMin = Math.floor((MIN_TIME[i] || 300) / 60);
+    rpt += `--- 阶段${i} (${s.done?'已完成':'未完成'}) ---\n`;
+    rpt += `用时: ${elMin}分${elSec}秒 (阈值≥${thMin}分钟) | 代码: ${(s.code||'').length}字符\n`;
+
+    // Cross-phase similarity
+    for (let j = 1; j < i; j++) {
+      const prev = state.stg[j].code;
+      if (!prev) continue;
+      const sim = similarity(s.code, prev);
+      const pct = Math.round(sim * 100);
+      rpt += `  与阶段${j}代码相似度: ${pct}%\n`;
+      if (sim >= SIM_THRESHOLD) rpt += `    ⚠ 相似度超过阈值(${Math.round(SIM_THRESHOLD*100)}%)，疑似同一份代码\n`;
+    }
+
+    if (s.flags.length) {
+      s.flags.forEach(f => { rpt += `  ❌ ${f}\n`; total++; });
+    } else { rpt += `  ✅ 无异常\n`; }
+    if (s.output) {
+      rpt += `  运行结果 (${s.output.length}字符):\n`;
+      rpt += `  ---\n${s.output.split('\n').map(l => '  | ' + l).join('\n')}\n  ---\n`;
+    }
+    if (s.outputImage) {
+      rpt += `  📸 已上传运行截图\n`;
+    }
+    rpt += `\n`;
+  }
+  rpt += `==============================\n总标记: ${total} 条\n`;
+  rpt += total >= 3 ? '⚠ 整体评估: 高度可疑' : total >= 1 ? '⚠ 部分可疑，建议口头答辩' : '✅ 未检测到异常\n';
+  const b = new Blob([rpt], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = `AI检测_${state.name}_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+}
+
+// ============================================================
+// Export as Image (with textarea content fix)
+// ============================================================
+async function exportImage(exportBtn) {
+  if (!exportBtn) exportBtn = document.querySelector('.btn-outline');
+  if (exportBtn) { exportBtn.disabled = true; exportBtn.textContent = '⏳ 正在生成图片...'; }
+
+  // Temporarily close audit panel for clean screenshot
+  const auditPanel = document.getElementById('auditPanel');
+  const wasShow = auditPanel.classList.contains('show');
+  auditPanel.classList.remove('show');
+
+  // ── KEY FIX: Replace all textareas with <pre> elements ──
+  // html2canvas cannot properly render textarea content — it only
+  // captures the visible portion, not scrolled content.
+  const textareas = document.querySelectorAll('.stages-panel textarea');
+  const replacements = [];
+  textareas.forEach(ta => {
+    const pre = document.createElement('pre');
+    // Copy computed styles
+    const cs = window.getComputedStyle(ta);
+    pre.style.width = ta.offsetWidth + 'px';
+    pre.style.minHeight = Math.max(ta.offsetHeight, 80) + 'px';
+    pre.style.padding = cs.padding;
+    pre.style.fontFamily = cs.fontFamily;
+    pre.style.fontSize = cs.fontSize;
+    pre.style.lineHeight = cs.lineHeight;
+    pre.style.color = cs.color;
+    pre.style.backgroundColor = cs.backgroundColor;
+    pre.style.border = cs.border;
+    pre.style.borderRadius = cs.borderRadius;
+    pre.style.whiteSpace = 'pre-wrap';
+    pre.style.wordBreak = 'break-word';
+    pre.style.overflow = 'visible';
+    pre.style.margin = '0';
+    pre.style.boxSizing = 'border-box';
+    pre.textContent = ta.value || ta.placeholder || '';
+
+    // Hide textarea, insert pre before it
+    ta.style.display = 'none';
+    ta.parentNode.insertBefore(pre, ta);
+    replacements.push({ ta, pre });
+  });
+
+  // Also make sure all uploaded images are visible and properly loaded
+  const images = document.querySelectorAll('.upload-area img');
+  const imgPromises = [];
+  images.forEach(img => {
+    if (img.src && img.src.startsWith('data:') && !img.complete) {
+      imgPromises.push(new Promise(resolve => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      }));
+    }
+  });
+  if (imgPromises.length > 0) {
+    await Promise.all(imgPromises);
+  }
+
+  try {
+    const el = document.querySelector('.main');
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#1a1a2e',
+      scale: 1.5,
+      useCORS: true,
+      logging: false
+    });
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `实验报告_${state.name}_${new Date().toISOString().slice(0,10)}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('📸 图片已导出！');
+    }, 'image/png');
+  } catch(e) {
+    toast('❌ 导出失败，请重试');
+    console.error(e);
+  }
+
+  // ── Restore textareas ──
+  replacements.forEach(({ ta, pre }) => {
+    ta.style.display = '';
+    pre.remove();
+  });
+
+  if (wasShow) auditPanel.classList.add('show');
+  if (exportBtn) { exportBtn.disabled = false; exportBtn.textContent = '📸 导出为图片'; }
+}
+
+// ============================================================
+// Reset
+// ============================================================
+function resetAll() {
+  if (!confirm('确定要清除所有代码和进度？此操作不可恢复！')) return;
+  localStorage.removeItem(KEY);
+  location.reload();
+}
+
+// ============================================================
+// Toast
+// ============================================================
+function toast(m) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = m;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ============================================================
+// Init
+// ============================================================
+load();
+progress();
+if (!state.stg[1].start) startT(1);
+audit();
+</script>
+</body>
+</html>

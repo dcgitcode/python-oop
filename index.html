@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python OOP 教学资源</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+  background:linear-gradient(135deg,#1a1a3e 0%,#2d1b69 100%);
+  color:#d0d0d8;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;
+}
+h1{font-size:36px;background:linear-gradient(90deg,#00B4D8,#2EC4B6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.sub{color:rgba(255,255,255,.4);margin-bottom:40px;font-size:15px}
+.cards{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;max-width:700px}
+.card{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:28px 24px;width:320px;
+  text-decoration:none;color:#d0d0d8;transition:all .3s;
+}
+.card:hover{
+  background:rgba(255,255,255,.08);border-color:#00B4D8;
+  transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,180,216,.15);
+}
+.card h2{font-size:20px;margin-bottom:8px;color:#e0e0e0}
+.card p{font-size:14px;color:#999;line-height:1.6}
+.card .tag{
+  display:inline-block;background:rgba(0,180,216,.15);
+  color:#00B4D8;padding:3px 10px;border-radius:4px;font-size:12px;
+  margin-top:14px;
+}
+.card .tag.green{background:rgba(46,196,182,.15);color:#2EC4B6}
+.footer{margin-top:40px;color:rgba(255,255,255,.2);font-size:13px}
+</style>
+</head>
+<body>
+<h1>Python 面向对象编程</h1>
+<p class="sub">广东机电职业技术学院 · 人工智能学院</p>
+<div class="cards">
+  <a class="card" href="OOP三大特征_课件.html">
+    <h2>📺 OOP 三大基本特征</h2>
+    <p>封装 · 继承 · 多态的互动课件，含生活化案例和可运行代码示例</p>
+    <span class="tag">课堂演示</span>
+  </a>
+  <a class="card" href="实验报告_校园二手交易系统.html">
+    <h2>🧪 校园二手交易系统</h2>
+    <p>分阶段实训报告，渐进式解锁题目，内置反 AI 辅助检测</p>
+    <span class="tag green">学生实验</span>
+  </a>
+</div>
+<p class="footer">← → 键盘翻页课件 | 实验报告支持导出图片</p>
+</body>
+</html>
