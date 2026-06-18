@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 文件操作 — 课件</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;500;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/cn-fontsource-yozai-regular/font.css" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --cream:#F5F0E6;--turquoise:#7ECDC0;--soft-pink:#F7C8D4;--butter:#FDE68A;
+  --mint:#A8E6CF;--lavender:#D4A5E8;--peach:#FFCBA4;--sky:#A8D8F0;--coral:#F8635F;
+  --text-dark:#2D2D2D;--text-muted:#6B6B6B;
+  --border:#2D2D2D;--border-width:3px;--radius:20px;--radius-lg:28px;
+  --shadow:6px 6px 0 var(--border);--shadow-sm:4px 4px 0 var(--border);
+  --font-display:'Fredoka One','ZCOOL XiaoWei',cursive;
+  --font-body:'Quicksand','Yozai',sans-serif;
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);color:var(--text-dark);background:var(--cream)}
+
+.slides-container{width:100vw;height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+.slide{width:100vw;height:100vh;min-height:100vh;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:36px 48px}
+
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:400;letter-spacing:0}
+h1{font-size:clamp(2.5rem,5vw,4.5rem);line-height:1.1}
+h2{font-size:clamp(1.8rem,3.5vw,3rem);line-height:1.15}
+h3{font-size:clamp(1.3rem,2vw,1.8rem);line-height:1.2}
+p,.body-text{font-family:var(--font-body);font-size:clamp(1rem,1.5vw,1.2rem);line-height:1.75;font-weight:500}
+
+.card{background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.badge{display:inline-block;padding:8px 20px;border-radius:50px;border:var(--border-width) solid var(--border);font-family:var(--font-display);font-size:1rem;background:var(--butter)}
+
+.deco{position:absolute;pointer-events:none;z-index:1}
+.deco svg{width:100%;height:100%;display:block}
+
+.nav-dots{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100}
+.nav-dot{width:11px;height:11px;border-radius:50%;border:2px solid var(--border);background:#fff;cursor:pointer;transition:all .2s}
+.nav-dot.active{background:var(--butter);transform:scale(1.2)}
+.slide-counter{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;border:var(--border-width) solid var(--border);border-radius:50px;padding:6px 20px;font-family:var(--font-display);font-size:.8rem;z-index:100;box-shadow:var(--shadow-sm)}
+
+/* ===== Code block ===== */
+.code-card{background:#1e1e2e;border:var(--border-width) solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 26px;width:100%;max-width:1000px;overflow-x:auto;z-index:2;position:relative}
+.code-card pre{font-family:'Consolas','Courier New',monospace;font-size:clamp(.88rem,1.2vw,1.05rem);line-height:1.65;color:#cdd6f4;white-space:pre;margin:0}
+.code-card .kw{color:#cba6f7}.code-card .fn{color:#89b4fa}.code-card .str{color:#a6e3a1}.code-card .cm{color:#6c7086;font-style:italic}.code-card .num{color:#fab387}.code-card .op{color:#89dceb}.code-card .bi{color:#cdd6f4}.code-card .ex{color:#f38ba8}
+
+/* ===== Slide 1: Title ===== */
+.slide-title{background:var(--cream)}
+.slide-title .title-box{text-align:center;z-index:2;position:relative}
+.slide-title h1{color:var(--text-dark);margin-bottom:12px;font-size:clamp(3.2rem,7vw,6.5rem)}
+.slide-title .subtitle{font-family:var(--font-body);font-weight:600;font-size:clamp(1rem,1.8vw,1.4rem);color:var(--text-muted);margin-top:16px;line-height:1.75}
+.slide-title .badge-row{display:flex;gap:12px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+.slide-title .badge:nth-child(1){background:var(--butter)}.slide-title .badge:nth-child(2){background:var(--mint)}.slide-title .badge:nth-child(3){background:var(--soft-pink)}.slide-title .badge:nth-child(4){background:var(--lavender)}
+
+.slide-title .deco-daisy-tl{top:-30px;left:-30px;width:220px;height:220px}
+.slide-title .deco-daisy-tr{top:20px;right:-20px;width:180px;height:180px}
+.slide-title .deco-daisy-bl{bottom:-40px;left:20px;width:200px;height:200px}
+.slide-title .deco-daisy-br{bottom:10px;right:-30px;width:210px;height:210px}
+.slide-title .deco-star-1{top:12%;left:6%;width:90px;height:90px}
+.slide-title .deco-star-2{bottom:18%;left:10%;width:70px;height:70px}
+.slide-title .deco-star-3{top:18%;right:8%;width:80px;height:80px}
+
+/* ===== Welcome frame ===== */
+.welcome-frame{width:100%;max-width:1100px;position:relative;z-index:2}
+.welcome-header{background:var(--mint);border:var(--border-width) solid var(--border);border-bottom:none;border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:16px 32px;text-align:center}
+.welcome-header h2{font-size:clamp(1.4rem,2.5vw,2rem);color:var(--text-dark)}
+.welcome-body{background:#fff;border:var(--border-width) solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:28px 42px;box-shadow:var(--shadow)}
+.welcome-list{list-style:none;display:flex;flex-direction:column;gap:14px}
+.welcome-list li{font-size:clamp(1rem,1.5vw,1.2rem);font-weight:600;padding-left:36px;position:relative;line-height:1.75}
+.welcome-list li::before{content:"";position:absolute;left:0;top:6px;width:20px;height:20px;background:var(--butter);border:2px solid var(--border);border-radius:50%}
+
+/* ===== Info Cards Grid ===== */
+.cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;width:100%;max-width:1100px;z-index:2;position:relative}
+.info-card{background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px}
+.info-card .card-icon{width:50px;height:50px;border-radius:50%;border:var(--border-width) solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:2px}
+.info-card .card-icon.i1{background:var(--soft-pink)}.info-card .card-icon.i2{background:var(--mint)}.info-card .card-icon.i3{background:var(--sky)}.info-card .card-icon.i4{background:var(--lavender)}
+.info-card h4{font-size:1.25rem}.info-card p{font-size:1rem;color:var(--text-muted);font-weight:500;line-height:1.7}
+
+/* ===== Timeline ===== */
+.timeline-wrap{display:flex;flex-direction:column;gap:16px;width:100%;max-width:950px;z-index:2;position:relative}
+.timeline-row{display:flex;align-items:center;gap:18px}
+.timeline-dot{width:46px;height:46px;border-radius:50%;border:var(--border-width) solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.1rem;color:#fff}
+.timeline-dot.d1{background:var(--coral)}.timeline-dot.d2{background:var(--mint)}.timeline-dot.d3{background:var(--sky)}.timeline-dot.d4{background:var(--lavender)}.timeline-dot.d5{background:var(--butter);color:var(--text-dark)}
+.timeline-card{flex:1;background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius);padding:14px 22px;box-shadow:var(--shadow-sm)}
+.timeline-card h4{margin-bottom:3px;font-size:1.2rem}.timeline-card p{font-size:1rem;color:var(--text-muted);font-weight:500;line-height:1.7}
+
+/* ===== Process Flow ===== */
+.process-flow{display:flex;align-items:flex-start;justify-content:center;gap:14px;width:100%;max-width:1150px;z-index:2;position:relative;flex-wrap:wrap}
+.process-step{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;min-width:140px}
+.process-arrow{font-family:var(--font-display);font-size:2rem;color:var(--border);margin-top:28px;flex-shrink:0}
+.step-circle{width:96px;height:96px;border-radius:50%;border:var(--border-width) solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.9rem;color:#fff;box-shadow:var(--shadow-sm);flex-shrink:0}
+.step-circle.s1{background:var(--coral)}.step-circle.s2{background:var(--turquoise)}.step-circle.s3{background:var(--lavender)}
+.step-title{font-family:var(--font-display);font-size:1.2rem}
+.step-desc{font-size:.98rem;font-weight:600;color:var(--text-muted);line-height:1.7;max-width:220px}
+
+/* ===== Quote / Life Scene box ===== */
+.quote-box{background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius-lg);padding:36px 48px;box-shadow:var(--shadow);max-width:950px;width:100%;text-align:center;z-index:2;position:relative}
+.quote-mark{font-family:var(--font-display);font-size:3.5rem;line-height:1;color:var(--soft-pink);margin-bottom:6px}
+.quote-text{font-family:var(--font-body);font-size:clamp(1.05rem,1.8vw,1.45rem);line-height:1.65;color:var(--text-dark);font-weight:600;margin-bottom:16px}
+.quote-author{font-weight:700;font-size:.95rem;color:var(--text-muted)}
+
+/* ===== Analogy Cards (场景卡) ===== */
+.scene-row{display:flex;gap:20px;width:100%;max-width:1100px;z-index:2;position:relative;align-items:stretch;flex-wrap:wrap;justify-content:center}
+.scene-card{flex:1;min-width:200px;background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow-sm)}
+.scene-card .scene-emoji{font-size:2.2rem;margin-bottom:8px}
+.scene-card h4{font-size:1.15rem;margin-bottom:6px}
+.scene-card p{font-size:.96rem;color:var(--text-muted);font-weight:500;line-height:1.65}
+.scene-arrow{font-family:var(--font-display);font-size:1.8rem;color:var(--border);display:flex;align-items:center;flex-shrink:0}
+
+/* ===== Highlight tip box ===== */
+.tip-box{background:var(--butter);border:var(--border-width) solid var(--border);border-radius:var(--radius);padding:14px 22px;box-shadow:var(--shadow-sm);width:100%;max-width:1000px;z-index:2;position:relative;margin-top:12px}
+.tip-box p{font-size:1.02rem;font-weight:700;color:var(--text-dark);line-height:1.65}
+.tip-box.tip-pink{background:var(--soft-pink)}
+.tip-box.tip-mint{background:var(--mint)}
+.tip-box.tip-coral{background:#fff0f0;border-color:#f38ba8}
+
+/* ===== Compare cards ===== */
+.compare-wrap{display:flex;gap:26px;width:100%;max-width:1150px;z-index:2;position:relative;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+.compare-card{flex:1;min-width:320px;max-width:480px}
+.compare-header{text-align:center;padding:12px 20px;font-family:var(--font-display);font-size:1.3rem;border-bottom:var(--border-width) solid var(--border)}
+.compare-body{padding:18px 22px}
+.compare-body p{line-height:1.7;font-weight:500;font-size:1.02rem}
+
+/* ===== Section title slides ===== */
+.section-header{z-index:2;position:relative;text-align:center;max-width:900px}
+.section-header h2{margin-bottom:12px}
+.section-header p{color:var(--text-muted);font-weight:500;line-height:1.75}
+
+/* ===== Mode Table ===== */
+.mode-table-wrap{width:100%;max-width:1100px;z-index:2;position:relative;overflow-x:auto}
+.mode-table{width:100%;border-collapse:separate;border-spacing:0;border:var(--border-width) solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);font-size:1rem}
+.mode-table th{background:var(--turquoise);color:#fff;font-family:var(--font-display);font-size:1.1rem;padding:14px 18px;text-align:center;border-bottom:var(--border-width) solid var(--border)}
+.mode-table td{padding:12px 18px;text-align:center;border-bottom:2px solid #e0d8c8;font-weight:500;line-height:1.6}
+.mode-table tr:last-child td{border-bottom:none}
+.mode-table tr:nth-child(even){background:rgba(168,230,207,.15)}
+.mode-table .mode-code{font-family:'Consolas',monospace;font-weight:700;color:var(--coral);font-size:1.1rem}
+.mode-table .mode-name{font-weight:700;color:var(--text-dark)}
+
+/* ===== Syntax box ===== */
+.syntax-box{background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);max-width:1000px;width:100%;z-index:2;position:relative;overflow:hidden}
+.syntax-header{background:var(--mint);border-bottom:var(--border-width) solid var(--border);padding:14px 28px;font-family:var(--font-display);font-size:1.3rem;text-align:center}
+.syntax-body{padding:24px 32px}
+.syntax-line{font-family:'Consolas','Courier New',monospace;font-size:clamp(1rem,1.4vw,1.2rem);line-height:2;font-weight:600;color:var(--text-dark)}
+.syntax-line .syn-kw{color:#9333ea}.syntax-line .syn-fn{color:#2563eb}.syntax-line .syn-str{color:#16a34a}.syntax-line .syn-cm{color:#9ca3af;font-style:italic}.syntax-line .syn-param{color:#c2410c;font-weight:700}
+.syntax-desc{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.syntax-desc-item{display:flex;align-items:flex-start;gap:12px;font-size:1rem;font-weight:500;line-height:1.65}
+.syntax-desc-item .param-tag{display:inline-block;background:var(--soft-pink);border:2px solid var(--border);border-radius:8px;padding:2px 10px;font-family:'Consolas',monospace;font-weight:700;font-size:.92rem;white-space:nowrap}
+
+/* ===== Colored slide backgrounds ===== */
+.slide-turquoise{background:var(--turquoise)}
+.slide-turquoise h2{color:#fff;text-shadow:3px 3px 0 var(--border)}
+.slide-soft-pink{background:var(--soft-pink)}
+.slide-soft-pink h2{color:var(--text-dark);text-shadow:2px 2px 0 rgba(0,0,0,.12)}
+.slide-butter{background:var(--butter)}
+.slide-lavender{background:var(--lavender)}
+.slide-lavender h2{color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.2)}
+.slide-sky{background:var(--sky)}
+.slide-sky h2{color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.2)}
+.slide-peach{background:var(--peach)}
+.slide-mint-bg{background:var(--mint)}
+.slide-mint-bg h2{color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.15)}
+.slide-coral-bg{background:var(--coral)}
+.slide-coral-bg h2{color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.2)}
+
+/* ===== Responsive ===== */
+@media(max-width:768px){
+  .slide{padding:22px 18px}
+  .cards-grid{grid-template-columns:1fr}
+  .process-flow{flex-direction:column;align-items:center}
+  .process-arrow{transform:rotate(90deg);margin:0}
+  .compare-wrap{flex-direction:column;align-items:center}
+  .scene-row{flex-direction:column}
+  .nav-dots{display:none}
+  .deco{opacity:.5}
+  .code-card pre{font-size:.7rem}
+  .mode-table{font-size:.82rem}
+}
+@media(max-width:480px){.deco{opacity:.3}}
+</style>
+</head>
+<body>
+
+<div class="slides-container" id="slideContainer">
+
+<!-- ====== SLIDE 1: 封面 ====== -->
+<section class="slide slide-title" id="slide-1">
+  <div class="deco deco-daisy-tl"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><style>.cls-1{fill:#FCDF6C}.cls-2{fill:none;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}.cls-3{fill:#FFFFFF;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}</style><path class="cls-3" d="m66.6 53.8-5.9-13.8c-2.2-5.9-4.6-17.9-1.7-26.2 1.7-4.9 6.7-11.4 15.4-11.4 8.7-.2 13.4 4.6 15.7 8.6 4.8 8.1 2.5 20.3-.1 27.7l-6.8 15.1"/><path class="cls-3" d="m92.1 115.2c1.3 5.8 1.9 13.8-.2 19.9-1.9 5.1-6.4 12.5-16.9 12.5-8.4 0-14.9-5.3-16.8-13.1-1.7-7-.6-15.2 1.7-22l6.7-16.4"/><ellipse class="cls-3" cx="75.1" cy="75" rx="22.5" ry="22.9"/><path class="cls-1" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"/><path class="cls-2" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"/></svg></div>
+  <div class="deco deco-daisy-br"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><style>.cls-1{fill:#FFCBA4}.cls-3{fill:#FFFFFF;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}.cls-2b{fill:none;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}</style><path class="cls-3" d="m66.6 53.8-5.9-13.8c-2.2-5.9-4.6-17.9-1.7-26.2 1.7-4.9 6.7-11.4 15.4-11.4 8.7-.2 13.4 4.6 15.7 8.6 4.8 8.1 2.5 20.3-.1 27.7l-6.8 15.1"/><path class="cls-3" d="m92.1 115.2c1.3 5.8 1.9 13.8-.2 19.9-1.9 5.1-6.4 12.5-16.9 12.5-8.4 0-14.9-5.3-16.8-13.1-1.7-7-.6-15.2 1.7-22l6.7-16.4"/><ellipse class="cls-3" cx="75.1" cy="75" rx="22.5" ry="22.9"/><path class="cls-1" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"/></svg></div>
+  <div class="deco deco-star-1"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#000" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+  <div class="deco deco-star-2"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#A8E6CF" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+  <div class="deco deco-star-3"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FDE366" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+  <div class="title-box">
+    <h1>Python 文件操作</h1>
+    <p class="subtitle">让数据从内存走向硬盘，实现持久化存储</p>
+    <div class="badge-row">
+      <span class="badge">文件概述</span>
+      <span class="badge">打开与关闭</span>
+      <span class="badge">写文本文件</span>
+      <span class="badge">案例实战</span>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SLIDE 2: 学习目标 ====== -->
+<section class="slide" id="slide-2" style="background:var(--cream)">
+  <div class="deco" style="top:6%;left:4%;width:130px;height:130px"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="26" fill="#FFCD57" stroke="#2D2D2D" stroke-width="2.8"/><g stroke="#2D2D2D" stroke-width="2.8" stroke-linecap="round"><line x1="60" y1="10" x2="60" y2="24"/><line x1="60" y1="96" x2="60" y2="110"/><line x1="10" y1="60" x2="24" y2="60"/><line x1="96" y1="60" x2="110" y2="60"/><line x1="24.5" y1="24.5" x2="34" y2="34"/><line x1="86" y1="86" x2="95.5" y2="95.5"/><line x1="24.5" y1="95.5" x2="34" y2="86"/><line x1="86" y1="34" x2="95.5" y2="24.5"/></g><circle cx="51" cy="55" r="3" fill="#2D2D2D"/><circle cx="69" cy="55" r="3" fill="#2D2D2D"/><path d="M 50 68 Q 60 76 70 68" fill="none" stroke="#2D2D2D" stroke-width="2.8" stroke-linecap="round"/></svg></div>
+  <div class="deco" style="bottom:5%;right:4%;width:160px;height:120px"><svg viewBox="0 0 140 101.4" xmlns="http://www.w3.org/2000/svg"><style>.rb1{fill:#F8635F;stroke:#1E1E1C;stroke-width:1.6;stroke-miterlimit:10}.rb2{fill:#FDE366;stroke:#1E1E1C;stroke-width:1.6;stroke-miterlimit:10}.rb3{fill:#8DE3B7;stroke:#1E1E1C;stroke-width:1.6;stroke-miterlimit:10}.rb4{fill:#85C5FE;stroke:#1E1E1C;stroke-width:1.6;stroke-miterlimit:10}</style><path class="rb1" d="M130 95c0-35-25.5-63.5-60-63.5S10 60 10 95"/><path class="rb2" d="M115 95c0-26.2-19-48.5-45-48.5S25 68.8 25 95"/><path class="rb3" d="M100 95c0-17.5-12.8-33.5-30-33.5S40 77.5 40 95"/><path class="rb4" d="M85 95c0-8.8-6.3-18.5-15-18.5S55 86.2 55 95"/></svg></div>
+  <div class="welcome-frame">
+    <div class="welcome-header"><h2>学习目标</h2></div>
+    <div class="welcome-body">
+      <ul class="welcome-list">
+        <li>理解文件的概念，区分文本文件与二进制文件，明白为什么需要文件</li>
+        <li>掌握 open() 和 close() 的用法；理解 rt / wt / at 模式中 <strong>t 的含义</strong></li>
+        <li>掌握用 write() 方法写入文本文件，区分 <strong>"w" 覆盖</strong> 和 <strong>"a" 追加</strong></li>
+        <li>能用 <strong>try / except / finally</strong> 结构处理文件操作异常，保证文件正确关闭</li>
+        <li>完成综合案例：将学生信息格式化写入文本文件</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SLIDE 3: 第1节 — 生活化导入 ====== -->
+<section class="slide slide-butter" id="slide-3">
+  <h2 style="margin-bottom:26px;position:relative;z-index:2;text-shadow:2px 2px 0 var(--border)">第一节：文件概述</h2>
+  <div class="quote-box" style="text-align:left;max-width:950px">
+    <div class="quote-mark">"</div>
+    <p class="quote-text" style="text-align:left">
+      每学期开学，辅导员要统计全班同学的<strong>姓名、学号、联系方式</strong>。<br>
+      如果只存在变量里——程序一关，数据就消失了！<br><br>
+      我们平时用<strong>手机记事本</strong>写备忘录、用 <strong>Excel</strong> 填成绩表……<br>
+      这些数据都永久保存在文件里。<br>
+      今天学：Python 怎么把数据存进文件。
+    </p>
+    <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap">
+      <span class="badge" style="background:var(--soft-pink)">变量 → 内存</span>
+      <span style="font-family:var(--font-display);font-size:1.4rem;line-height:2">→</span>
+      <span class="badge" style="background:var(--mint)">文件 → 硬盘</span>
+      <span style="font-family:var(--font-display);font-size:1.4rem;line-height:2">→</span>
+      <span class="badge" style="background:var(--lavender)">永久保存 ✓</span>
+    </div>
+  </div>
+  <div class="deco" style="top:6%;right:6%;width:80px;height:80px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 4: 文件的分类（修改后：更直观的类比）====== -->
+<section class="slide slide-turquoise" id="slide-4">
+  <h2 style="margin-bottom:28px;position:relative;z-index:2">文件的分类与类比</h2>
+  <div class="cards-grid" style="z-index:2;position:relative">
+    <div class="info-card">
+      <div class="card-icon i2">📝</div>
+      <h4>文本文件</h4>
+      <p>字符存储，记事本可直接打开看懂。<br>如 .txt、.py、.csv<br><br>🔖 <em>就像手写信——人可直接读懂</em></p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon i3">💾</div>
+      <h4>二进制文件</h4>
+      <p>二进制存储，记事本打开是乱码。<br>如 .jpg、.mp3、.exe<br><br>🔐 <em>就像密电码——需要专用翻译机</em></p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon i1">🍜</div>
+      <h4>食堂的菜谱 .txt</h4>
+      <p>用记事本打开菜谱.txt，能直接看到<strong>"红烧肉 18元"</strong>这样的文字——这就是<strong>文本文件</strong>，人能直接读懂。</p>
+    </div>
+    <div class="info-card">
+      <div class="card-icon i4">🎓</div>
+      <h4>你拍的毕业照 .jpg</h4>
+      <p>用记事本打开毕业照.jpg，看到的是<strong>一堆乱码</strong>！必须用图片查看器才能看到照片——这就是<strong>二进制文件</strong>。</p>
+    </div>
+  </div>
+  <div class="deco" style="top:-10px;left:-10px;width:130px;height:130px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><style>.cls-1{fill:#FCDF6C}.cls-3{fill:#FFFFFF;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}</style><ellipse class="cls-3" cx="75.1" cy="75" rx="22.5" ry="22.9"/><path class="cls-1" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 5: 第2节 — 图书馆借书类比 ====== -->
+<section class="slide slide-soft-pink" id="slide-5">
+  <h2 style="margin-bottom:22px;position:relative;z-index:2">第二节：文件的打开与关闭</h2>
+  <div class="process-flow" style="margin-bottom:24px">
+    <div class="process-step">
+      <div class="step-circle s1">1</div>
+      <div class="step-title">打开文件</div>
+      <div class="step-desc">open() 函数<br>指定文件名和模式<br><em>📚 去图书馆登记取书</em></div>
+    </div>
+    <div class="process-arrow">→</div>
+    <div class="process-step">
+      <div class="step-circle s2">2</div>
+      <div class="step-title">读写操作</div>
+      <div class="step-desc">read() / write()<br>对文件内容操作<br><em>📖 翻阅书本摘抄笔记</em></div>
+    </div>
+    <div class="process-arrow">→</div>
+    <div class="process-step">
+      <div class="step-circle s3">3</div>
+      <div class="step-title">关闭文件</div>
+      <div class="step-desc">close() 释放资源<br>必须执行！<br><em>📤 还书归还登记</em></div>
+    </div>
+  </div>
+  <div class="tip-box tip-mint" style="max-width:1000px">
+    <p>💡 如果图书馆突然<strong>停电（异常）</strong>——书还要不要还？当然要！<br>
+    文件操作也一样：无论成功还是出错，都必须保证文件被关闭，否则数据丢失！</p>
+  </div>
+  <div class="deco" style="bottom:6%;right:4%;width:130px;height:130px"><svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg"><style>.cl2{fill:#fff;stroke:#000;stroke-width:2.1405;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}.cl0{fill:#C6E3F6}</style><path class="cl2" d="m106.8 57.3c1.7 0 2.8.1 3.8.3.2-1 .3-2 .3-3.1 0-7.2-6.3-16.3-15.5-16.3-2 0-3.9.4-6.2 1.1-2.2-6.2-9.3-16-23.8-16-10 0-18.8 5.8-23 15-1.9-.7-4.1-1.1-6.7-1.1-10.1 0-19.2 8.3-19.2 19.6 0 1.3.2 2.6.4 4.3-7.6 1.5-14.2 8.2-14.2 17.7 0 8.4 6.4 18.9 17.4 18.9 2.2 0 3.8-.1 5.5-.7l27.3 2.6 48.1-4.7c1.9.5 3.8.8 6.2.8 11.3 0 18.2-9 18.2-19.7 0-7.8-6.4-17.4-15-18.4z"/><path class="cl0" d="m123.7 70.6c-1.4 6.3-6.6 14.5-17.8 14.6l-1.6.9c-2.9 2.8-6.9 5.3-12.5 5.3-2.1 0-4.4-.3-6.4-1.1-.5-.2-1.2-.1-1.6.2-2.1 1.6-7.4 5.2-14.8 5.2-5.1 0-10.5-1.9-15.2-5.5-.8-1.1-2.3-1.1-2.4.6-2 4-14.5 7.7-23-3.8-.5-1.2-2.1-1.4-2.3.6-8.8 1-16.3-2.3-19.6-10.6-1.4 5.3 1.5 20.3 16 20.2l28.3 4.2 48.1-4.7c2 .6 3.9 1.6 7.7 1.6 5 0 9.5-1.5 12.5-5.6l3.5.4c1 .2 2 .2 3 .2 11.2 0 19.2-10 17.2-21.6z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 6: open() 函数语法介绍（新增页）====== -->
+<section class="slide" id="slide-6" style="background:var(--cream)">
+  <div class="deco" style="top:6%;right:4%;width:80px;height:80px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#A8E6CF" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+  <div class="syntax-box">
+    <div class="syntax-header">open() 函数 — 语法介绍</div>
+    <div class="syntax-body">
+      <div class="syntax-line">
+        <span class="syn-kw">f</span> = <span class="syn-fn">open</span>(<span class="syn-param">文件名</span>, <span class="syn-param">模式</span>)
+      </div>
+      <div style="margin-top:12px">
+        <div class="syntax-line" style="font-size:.95rem;color:var(--text-muted)">
+          <span class="syn-cm"># 示例：打开文件准备写入</span>
+        </div>
+        <div class="syntax-line">
+          <span class="syn-kw">f</span> = <span class="syn-fn">open</span>(<span class="syn-str">"hello.txt"</span>, <span class="syn-str">"w"</span>)
+        </div>
+      </div>
+      <div class="syntax-desc">
+        <div class="syntax-desc-item">
+          <span class="param-tag">文件名</span>
+          <span>要打开的文件路径，如 <code style="background:rgba(0,0,0,.08);padding:2px 6px;border-radius:4px">"score.txt"</code>（字符串类型）</span>
+        </div>
+        <div class="syntax-desc-item">
+          <span class="param-tag">模式</span>
+          <span>决定打开后能做什么：读？写？追加？——详见下一页对比表</span>
+        </div>
+        <div class="syntax-desc-item">
+          <span class="param-tag">返回值</span>
+          <span>返回一个<strong>文件对象</strong>，用变量 f 接收，后续通过 f 来操作文件</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="deco" style="bottom:5%;left:4%;width:65px;height:65px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 7: open() 模式对比表（修改：表格形式）====== -->
+<section class="slide slide-lavender" id="slide-7">
+  <h2 style="margin-bottom:22px;position:relative;z-index:2">open() 模式对比表</h2>
+  <div class="mode-table-wrap">
+    <table class="mode-table">
+      <thead>
+        <tr>
+          <th>模式</th>
+          <th>含义</th>
+          <th>文件不存在时</th>
+          <th>文件已存在时</th>
+          <th>典型场景</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mode-code">"r"</span> <span style="font-size:.85rem;color:var(--text-muted)">≡ "rt"</span></td>
+          <td class="mode-name">只读（文本）</td>
+          <td>❌ 报错 FileNotFoundError</td>
+          <td>从头读取</td>
+          <td>读取配置文件</td>
+        </tr>
+        <tr>
+          <td><span class="mode-code">"w"</span> <span style="font-size:.85rem;color:var(--text-muted)">≡ "wt"</span></td>
+          <td class="mode-name">只写（文本）</td>
+          <td>✅ 自动新建</td>
+          <td>⚠️ 清空原内容</td>
+          <td>宿管建晚归记录</td>
+        </tr>
+        <tr>
+          <td><span class="mode-code">"a"</span> <span style="font-size:.85rem;color:var(--text-muted)">≡ "at"</span></td>
+          <td class="mode-name">追加（文本）</td>
+          <td>✅ 自动新建</td>
+          <td>在末尾追加</td>
+          <td>班长追加班费账本</td>
+        </tr>
+        <tr>
+          <td><span class="mode-code">"rb"</span></td>
+          <td class="mode-name">只读（二进制）</td>
+          <td>❌ 报错</td>
+          <td>从头读取</td>
+          <td>读取图片/音频</td>
+        </tr>
+        <tr>
+          <td><span class="mode-code">"wb"</span></td>
+          <td class="mode-name">只写（二进制）</td>
+          <td>✅ 自动新建</td>
+          <td>⚠️ 清空原内容</td>
+          <td>保存图片/音频</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="tip-box" style="max-width:1100px">
+    <p>🔤 <strong>"t" = 文本模式</strong>（默认，可省略）→ 操作字符串 str &nbsp;&nbsp;｜&nbsp;&nbsp;<strong>"b" = 二进制模式</strong> → 操作字节 bytes<br>
+    🎯 口诀：<strong>"r" 必须文件存在</strong>，<strong>"w"/"a" 不存在自动新建</strong>；<strong>"w" 清空重写</strong>，<strong>"a" 末尾追加</strong></p>
+  </div>
+  <div class="deco" style="bottom:5%;right:3%;width:70px;height:70px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 8: try/except/finally 安全模式（修改：去掉write，只演示open/close+异常）====== -->
+<section class="slide slide-butter" id="slide-8">
+  <h2 style="margin-bottom:20px;position:relative;z-index:2;text-shadow:2px 2px 0 var(--border)">安全文件操作：try / except / finally</h2>
+  <div class="code-card" style="max-width:1000px">
+    <pre><span class="cm"># 有缺陷的代码：如果中间出错，close() 永远不执行！</span>
+<span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"test.txt"</span>, <span class="str">"r"</span>)       <span class="cm"># 假设文件不存在...</span>
+<span class="cm"># 读取操作...</span>
+<span class="bi">f</span>.<span class="fn">close</span>()                    <span class="cm"># ⚠️ 如果上面报错，这行永远不执行！</span>
+
+<span class="cm"># ✅ 正确做法：try/except/finally 保证文件一定关闭</span>
+<span class="cm"># 口诀：打开文件放 try，出错进 except，关闭放 finally！</span>
+<span class="bi">f</span> = <span class="kw">None</span>
+<span class="kw">try</span>:
+    <span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"test.txt"</span>, <span class="str">"r"</span>)
+    <span class="cm"># 读取或写入操作...</span>
+<span class="kw">except</span> <span class="ex">FileNotFoundError</span>:
+    <span class="fn">print</span>(<span class="str">"错误：文件不存在！"</span>)
+<span class="kw">except</span> <span class="ex">PermissionError</span>:
+    <span class="fn">print</span>(<span class="str">"错误：没有权限访问该文件！"</span>)
+<span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="bi">e</span>:
+    <span class="fn">print</span>(<span class="str">f"发生未知错误：{e}"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> <span class="bi">f</span>:          <span class="cm"># f=None 初始化是防止 finally 里报 NameError</span>
+        <span class="bi">f</span>.<span class="fn">close</span>()
+        <span class="fn">print</span>(<span class="str">"文件已关闭"</span>)</pre>
+  </div>
+  <div class="deco" style="top:6%;right:5%;width:70px;height:70px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+  <div class="deco" style="bottom:5%;left:3%;width:130px;height:130px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><style>.cls-1{fill:#FCDF6C}.cls-3{fill:#FFFFFF;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}</style><ellipse class="cls-3" cx="75.1" cy="75" rx="22.5" ry="22.9"/><path class="cls-1" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 9: 第3节 — 写文本文件导入 ====== -->
+<section class="slide slide-mint-bg" id="slide-9">
+  <h2 style="margin-bottom:22px;position:relative;z-index:2">第三节：写文本文件</h2>
+  <div class="quote-box" style="text-align:left;max-width:950px">
+    <div class="quote-mark">"</div>
+    <p class="quote-text" style="text-align:left">
+      我们已经学会了安全地打开和关闭文件。<br>
+      现在问题来了——打开之后，<strong>怎么把内容写进去？</strong><br><br>
+      就像你打开了笔记本，总得知道怎么<strong>握笔写字</strong>吧？<br><br>
+      📌 核心方法：<code style="background:rgba(0,0,0,.12);padding:2px 8px;border-radius:6px;font-family:'Consolas',monospace;font-size:1.1em">f.write("内容")</code>
+    </p>
+  </div>
+  <div style="display:flex;gap:18px;margin-top:18px;z-index:2;position:relative;flex-wrap:wrap;justify-content:center">
+    <div class="tip-box" style="max-width:420px;margin-top:0">
+      <p>⚠️ write() <strong>不会自动换行</strong>，需要手动加 \n</p>
+    </div>
+    <div class="tip-box tip-pink" style="max-width:420px;margin-top:0">
+      <p>⚠️ write() 只能写入<strong>字符串</strong>，数字需先 str() 转换</p>
+    </div>
+  </div>
+  <div class="deco" style="top:6%;right:6%;width:75px;height:75px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FDE366" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 10: "w" vs "a" — 社团日志案例（教案原文）====== -->
+<section class="slide slide-peach" id="slide-10">
+  <h2 style="margin-bottom:20px;position:relative;z-index:2">"w" 覆盖 vs "a" 追加 — 社团日志</h2>
+  <div class="compare-wrap">
+    <div class="compare-card card">
+      <div class="compare-header" style="background:var(--soft-pink)">❌ 错误：用 "w" 追加日志</div>
+      <div class="compare-body">
+        <div class="code-card" style="box-shadow:none;border:none;padding:14px 18px;border-radius:12px">
+          <pre><span class="cm"># 先用"w"模式写入</span>
+<span class="bi">f</span> = <span class="kw">None</span>
+<span class="kw">try</span>:
+    <span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"log.txt"</span>, <span class="str">"w"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">"第一次活动记录\n"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> <span class="bi">f</span>: <span class="bi">f</span>.<span class="fn">close</span>()
+
+<span class="cm"># 第二天再用"w"写入</span>
+<span class="bi">f</span> = <span class="kw">None</span>
+<span class="kw">try</span>:
+    <span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"log.txt"</span>, <span class="str">"w"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">"第二次活动记录\n"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> <span class="bi">f</span>: <span class="bi">f</span>.<span class="fn">close</span>()
+<span class="cm"># 结果：第一次记录消失了！</span></pre>
+        </div>
+      </div>
+    </div>
+    <div class="compare-card card">
+      <div class="compare-header" style="background:var(--mint)">✅ 正确：用 "a" 追加日志</div>
+      <div class="compare-body">
+        <div class="code-card" style="box-shadow:none;border:none;padding:14px 18px;border-radius:12px">
+          <pre><span class="cm"># 社团负责人追加活动日志</span>
+<span class="bi">f</span> = <span class="kw">None</span>
+<span class="kw">try</span>:
+    <span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"社团日志.txt"</span>, <span class="str">"a"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">"2025-09-10 招新活动\n"</span>)
+    <span class="fn">print</span>(<span class="str">"追加成功！"</span>)
+<span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="bi">e</span>:
+    <span class="fn">print</span>(<span class="str">f"写入失败：{e}"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> <span class="bi">f</span>:
+        <span class="bi">f</span>.<span class="fn">close</span>()
+
+<span class="cm"># 结果：保留所有历史记录 ✓</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tip-box tip-coral" style="max-width:1150px">
+    <p>🎯 口诀：<strong>新建/覆盖旧内容 → "w"</strong>（宿管晚归表）&nbsp;&nbsp;｜&nbsp;&nbsp;<strong>保留旧内容追加 → "a"</strong>（学生会日志、班费账本）</p>
+  </div>
+</section>
+
+<!-- ====== SLIDE 11: write() 代码示例（教案原文）====== -->
+<section class="slide slide-lavender" id="slide-11">
+  <h2 style="margin-bottom:20px;position:relative;z-index:2">write() 写入 — 代码示例</h2>
+  <div class="code-card" style="max-width:1000px">
+    <pre><span class="cm"># write() 方法：一次写入一个字符串（教案案例）</span>
+<span class="bi">f</span> = <span class="kw">None</span>
+<span class="kw">try</span>:
+    <span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"score.txt"</span>, <span class="str">"w"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">"姓名：张三\n"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">"成绩：95\n"</span>)
+    <span class="fn">print</span>(<span class="str">"写入成功！"</span>)
+<span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="bi">e</span>:
+    <span class="fn">print</span>(<span class="str">f"写入失败：{e}"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> <span class="bi">f</span>:
+        <span class="bi">f</span>.<span class="fn">close</span>()
+
+<span class="cm"># ⚠️ write() 不会自动换行，需要手动加 \n</span>
+<span class="cm"># ⚠️ write() 只能写入字符串，数字会报 TypeError</span>
+<span class="cm"># f.write(100)        # ❌ TypeError: write() argument must be str</span>
+<span class="bi">f</span>.<span class="fn">write</span>(<span class="fn">str</span>(<span class="num">100</span>))     <span class="cm"># ✅ 先转字符串</span></pre>
+  </div>
+  <div class="deco" style="top:8%;left:4%;width:70px;height:70px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FDE366" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 12: 第4节 — 综合案例导入 ====== -->
+<section class="slide slide-sky" id="slide-12">
+  <h2 style="margin-bottom:22px;position:relative;z-index:2">第四节：案例 — 学生信息存储到文件</h2>
+  <div class="quote-box" style="text-align:left;max-width:950px">
+    <div class="quote-mark">"</div>
+    <p class="quote-text" style="text-align:left">
+      新学期开学！辅导员手上有 5 个同学的信息：<br>
+      <strong>姓名、学号、手机号</strong><br><br>
+      之前这些信息全<strong>记在纸上</strong>——容易丢、不好查。<br>
+      现在我们用 Python 程序，把这些信息<strong>安全地存入文本文件</strong>。<br>
+      这就是数据的 <strong>"持久化"</strong>！
+    </p>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:18px;z-index:2;position:relative;flex-wrap:wrap;justify-content:center">
+    <div class="scene-card" style="min-width:180px;max-width:240px">
+      <div class="scene-emoji">📋</div>
+      <h4>单个学生信息</h4>
+      <p>将一个学生的姓名、学号、手机号格式化写入文件</p>
+    </div>
+    <div class="scene-arrow">→</div>
+    <div class="scene-card" style="min-width:180px;max-width:240px">
+      <div class="scene-emoji">👥</div>
+      <h4>批量写入</h4>
+      <p>用列表+循环，将多名学生信息依次写入文件</p>
+    </div>
+    <div class="scene-arrow">→</div>
+    <div class="scene-card" style="min-width:180px;max-width:240px">
+      <div class="scene-emoji">📊</div>
+      <h4>CSV 格式</h4>
+      <p>用逗号分隔，生成可直接用 Excel/WPS 打开的文件</p>
+    </div>
+  </div>
+  <div class="deco" style="top:8%;right:5%;width:70px;height:70px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 13: 案例一（教案原文）====== -->
+<section class="slide" id="slide-13" style="background:var(--cream)">
+  <h2 style="margin-bottom:18px;position:relative;z-index:2;text-shadow:none">案例一：单个学生信息写入</h2>
+  <div class="code-card" style="max-width:1000px">
+    <pre><span class="cm"># 案例：将一个学生的信息写入文件（含异常处理）</span>
+<span class="bi">name</span>   = <span class="str">"张三"</span>
+<span class="bi">stu_id</span> = <span class="str">"2024001"</span>
+<span class="bi">phone</span>  = <span class="str">"13800138000"</span>
+
+<span class="bi">f</span> = <span class="kw">None</span>
+<span class="kw">try</span>:
+    <span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"student_info.txt"</span>, <span class="str">"w"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">f"姓名：{name}\n"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">f"学号：{stu_id}\n"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">f"手机：{phone}\n"</span>)
+    <span class="fn">print</span>(<span class="str">"学生信息已保存！"</span>)
+<span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="bi">e</span>:
+    <span class="fn">print</span>(<span class="str">f"保存失败：{e}"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> <span class="bi">f</span>:
+        <span class="bi">f</span>.<span class="fn">close</span>()
+        <span class="fn">print</span>(<span class="str">"文件已关闭"</span>)</pre>
+  </div>
+  <div class="deco" style="top:6%;right:5%;width:70px;height:70px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#A8E6CF" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 14: 案例二（教案原文）====== -->
+<section class="slide slide-turquoise" id="slide-14">
+  <h2 style="margin-bottom:16px;position:relative;z-index:2">案例二：批量学生信息写入</h2>
+  <div class="code-card" style="max-width:1050px">
+    <pre><span class="cm"># 案例：将多个学生信息写入文件（含异常处理）</span>
+<span class="bi">students</span> = [
+    {<span class="str">"name"</span>: <span class="str">"张三"</span>, <span class="str">"id"</span>: <span class="str">"2024001"</span>, <span class="str">"phone"</span>: <span class="str">"13800138000"</span>},
+    {<span class="str">"name"</span>: <span class="str">"李四"</span>, <span class="str">"id"</span>: <span class="str">"2024002"</span>, <span class="str">"phone"</span>: <span class="str">"13900139000"</span>},
+    {<span class="str">"name"</span>: <span class="str">"王五"</span>, <span class="str">"id"</span>: <span class="str">"2024003"</span>, <span class="str">"phone"</span>: <span class="str">"15000150000"</span>},
+    {<span class="str">"name"</span>: <span class="str">"赵六"</span>, <span class="str">"id"</span>: <span class="str">"2024004"</span>, <span class="str">"phone"</span>: <span class="str">"18600186000"</span>},
+    {<span class="str">"name"</span>: <span class="str">"孙七"</span>, <span class="str">"id"</span>: <span class="str">"2024005"</span>, <span class="str">"phone"</span>: <span class="str">"13700137000"</span>},
+]
+<span class="bi">f</span> = <span class="kw">None</span>
+<span class="kw">try</span>:
+    <span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"students.txt"</span>, <span class="str">"w"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">"学号      姓名   手机号\n"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">"-" * 35 + "\n"</span>)
+    <span class="kw">for</span> <span class="bi">stu</span> <span class="kw">in</span> <span class="bi">students</span>:
+        <span class="bi">line</span> = <span class="bi">stu</span>[<span class="str">"id"</span>] + <span class="str">"  "</span> + <span class="bi">stu</span>[<span class="str">"name"</span>] + <span class="str">"   "</span> + <span class="bi">stu</span>[<span class="str">"phone"</span>] + <span class="str">"\n"</span>
+        <span class="bi">f</span>.<span class="fn">write</span>(<span class="bi">line</span>)
+    <span class="fn">print</span>(<span class="str">f"已保存{len(students)}名学生信息到students.txt"</span>)
+<span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="bi">e</span>:
+    <span class="fn">print</span>(<span class="str">f"保存失败：{e}"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> <span class="bi">f</span>:
+        <span class="bi">f</span>.<span class="fn">close</span>()
+        <span class="fn">print</span>(<span class="str">"文件已关闭"</span>)</pre>
+  </div>
+  <div class="deco" style="bottom:5%;right:4%;width:65px;height:65px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FDE366" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 15: 案例三 — CSV（教案原文）====== -->
+<section class="slide slide-butter" id="slide-15">
+  <h2 style="margin-bottom:16px;position:relative;z-index:2;text-shadow:2px 2px 0 var(--border)">案例三：CSV 格式化写入</h2>
+  <div class="code-card" style="max-width:1050px">
+    <pre><span class="cm"># 案例：用逗号分隔格式保存（方便其他程序读取）</span>
+<span class="bi">students</span> = [
+    {<span class="str">"name"</span>: <span class="str">"张三"</span>, <span class="str">"id"</span>: <span class="str">"2024001"</span>, <span class="str">"phone"</span>: <span class="str">"13800138000"</span>},
+    {<span class="str">"name"</span>: <span class="str">"李四"</span>, <span class="str">"id"</span>: <span class="str">"2024002"</span>, <span class="str">"phone"</span>: <span class="str">"13900139000"</span>},
+    {<span class="str">"name"</span>: <span class="str">"王五"</span>, <span class="str">"id"</span>: <span class="str">"2024003"</span>, <span class="str">"phone"</span>: <span class="str">"15000150000"</span>},
+]
+<span class="bi">f</span> = <span class="kw">None</span>
+<span class="kw">try</span>:
+    <span class="bi">f</span> = <span class="fn">open</span>(<span class="str">"students.csv"</span>, <span class="str">"w"</span>)
+    <span class="bi">f</span>.<span class="fn">write</span>(<span class="str">"学号,姓名,手机号\n"</span>)  <span class="cm"># CSV格式表头</span>
+    <span class="kw">for</span> <span class="bi">stu</span> <span class="kw">in</span> <span class="bi">students</span>:
+        <span class="bi">line</span> = <span class="bi">stu</span>[<span class="str">"id"</span>] + <span class="str">","</span> + <span class="bi">stu</span>[<span class="str">"name"</span>] + <span class="str">","</span> + <span class="bi">stu</span>[<span class="str">"phone"</span>] + <span class="str">"\n"</span>
+        <span class="bi">f</span>.<span class="fn">write</span>(<span class="bi">line</span>)
+    <span class="fn">print</span>(<span class="str">"CSV格式的学生信息已保存！"</span>)
+    <span class="fn">print</span>(<span class="str">"可以用Excel或WPS直接打开students.csv查看"</span>)
+<span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="bi">e</span>:
+    <span class="fn">print</span>(<span class="str">f"保存失败：{e}"</span>)
+<span class="kw">finally</span>:
+    <span class="kw">if</span> <span class="bi">f</span>:
+        <span class="bi">f</span>.<span class="fn">close</span>()</pre>
+  </div>
+  <div class="deco" style="top:6%;right:5%;width:70px;height:70px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+</section>
+
+<!-- ====== SLIDE 16: 课堂小结 ====== -->
+<section class="slide" id="slide-16" style="background:var(--cream)">
+  <div class="deco" style="top:-15px;left:-15px;width:140px;height:140px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><style>.cls-1{fill:#FCDF6C}.cls-3{fill:#FFFFFF;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}</style><ellipse class="cls-3" cx="75.1" cy="75" rx="22.5" ry="22.9"/><path class="cls-1" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"/></svg></div>
+  <div class="deco" style="top:10px;right:-15px;width:140px;height:140px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><style>.cls-1{fill:#A8E6CF}.cls-3{fill:#FFFFFF;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}</style><ellipse class="cls-3" cx="75.1" cy="75" rx="22.5" ry="22.9"/><path class="cls-1" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"/></svg></div>
+  <div class="deco" style="bottom:8%;left:4%;width:70px;height:70px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#D4A5E8" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"/></svg></div>
+  <div class="deco" style="bottom:6%;right:4%;width:120px;height:120px"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="26" fill="#FFCD57" stroke="#2D2D2D" stroke-width="2.8"/><g stroke="#2D2D2D" stroke-width="2.8" stroke-linecap="round"><line x1="60" y1="10" x2="60" y2="24"/><line x1="60" y1="96" x2="60" y2="110"/><line x1="10" y1="60" x2="24" y2="60"/><line x1="96" y1="60" x2="110" y2="60"/></g><circle cx="51" cy="55" r="3" fill="#2D2D2D"/><circle cx="69" cy="55" r="3" fill="#2D2D2D"/><path d="M 50 68 Q 60 76 70 68" fill="none" stroke="#2D2D2D" stroke-width="2.8" stroke-linecap="round"/></svg></div>
+
+  <div class="welcome-frame">
+    <div class="welcome-header" style="background:var(--soft-pink)"><h2>课堂小结</h2></div>
+    <div class="welcome-body">
+      <ul class="welcome-list">
+        <li>📁 文件是数据持久化的基本方式；文本文件（.txt/.csv）vs 二进制（.jpg/.mp3）</li>
+        <li>📖 图书馆借书三步法：open() 打开 → read()/write() 读写 → close() 关闭</li>
+        <li>🔤 "t" = 文本模式（默认可省略）；"r"="rt"，"w"="wt"，"a"="at"</li>
+        <li>⚡ 停电也要还书！用 <strong>try/except/finally</strong> 保证文件无论如何都被关闭</li>
+        <li>🏫 综合案例：辅导员开学统计学生信息 → 格式化写入 .txt 或 .csv 文件</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div><!-- /slides-container -->
+
+<!-- Nav dots -->
+<div class="nav-dots" id="navDots"></div>
+<div class="slide-counter" id="slideCounter">1 / 16</div>
+
+<script>
+const container = document.getElementById('slideContainer');
+const slides = container.querySelectorAll('.slide');
+const navDotsEl = document.getElementById('navDots');
+const counter = document.getElementById('slideCounter');
+const total = slides.length;
+
+for (let i = 0; i < total; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+  dot.addEventListener('click', () => { slides[i].scrollIntoView({ behavior: 'smooth' }); });
+  navDotsEl.appendChild(dot);
+}
+const dots = navDotsEl.querySelectorAll('.nav-dot');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const idx = Array.from(slides).indexOf(entry.target);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+      counter.textContent = (idx + 1) + ' / ' + total;
+    }
+  });
+}, { root: container, threshold: 0.6 });
+
+slides.forEach(s => observer.observe(s));
+
+document.addEventListener('keydown', (e) => {
+  let current = 0;
+  dots.forEach((d, i) => { if (d.classList.contains('active')) current = i; });
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    if (current < total - 1) slides[current + 1].scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
+    if (current > 0) slides[current - 1].scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'Home') {
+    e.preventDefault(); slides[0].scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'End') {
+    e.preventDefault(); slides[total - 1].scrollIntoView({ behavior: 'smooth' });
+  }
+});
+</script>
+</body>
+</html>

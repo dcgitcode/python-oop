@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 文件操作 — 读文本文件</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;500;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/cn-fontsource-yozai-regular/font.css" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --cream:#F5F0E6;--turquoise:#7ECDC0;--soft-pink:#F7C8D4;--butter:#FDE68A;
+  --mint:#A8E6CF;--lavender:#D4A5E8;--peach:#FFCBA4;--sky:#A8D8F0;--coral:#F8635F;
+  --text-dark:#2D2D2D;--text-muted:#6B6B6B;
+  --border:#2D2D2D;--border-width:3px;--radius:20px;--radius-lg:28px;
+  --shadow:6px 6px 0 var(--border);--shadow-sm:4px 4px 0 var(--border);
+  --font-display:'Fredoka One','ZCOOL XiaoWei',cursive;
+  --font-body:'Quicksand','Yozai',sans-serif;
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:var(--font-body);color:var(--text-dark);background:var(--cream)}
+
+.slides-container{width:100vw;height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+.slide{width:100vw;height:100vh;min-height:100vh;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;padding:36px 48px}
+
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:400;letter-spacing:0}
+h1{font-size:clamp(2.5rem,5vw,4.5rem);line-height:1.1}
+h2{font-size:clamp(1.8rem,3.5vw,3rem);line-height:1.15}
+h3{font-size:clamp(1.3rem,2vw,1.8rem);line-height:1.2}
+p,.body-text{font-family:var(--font-body);font-size:clamp(1rem,1.5vw,1.2rem);line-height:1.75;font-weight:500}
+
+.card{background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.badge{display:inline-block;padding:8px 20px;border-radius:50px;border:var(--border-width) solid var(--border);font-family:var(--font-display);font-size:1rem;background:var(--butter)}
+
+.deco{position:absolute;pointer-events:none;z-index:1}
+.deco svg{width:100%;height:100%;display:block}
+
+.nav-dots{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:100}
+.nav-dot{width:11px;height:11px;border-radius:50%;border:2px solid var(--border);background:#fff;cursor:pointer;transition:all .2s}
+.nav-dot.active{background:var(--butter);transform:scale(1.2)}
+.slide-counter{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;border:var(--border-width) solid var(--border);border-radius:50px;padding:6px 20px;font-family:var(--font-display);font-size:.8rem;z-index:100;box-shadow:var(--shadow-sm)}
+
+/* ===== Code block ===== */
+.code-card{background:#1e1e2e;border:var(--border-width) solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 24px;width:100%;max-width:1000px;overflow-x:auto;z-index:2;position:relative}
+.code-card pre{font-family:'Consolas','Courier New',monospace;font-size:clamp(.85rem,1.15vw,1rem);line-height:1.6;color:#cdd6f4;white-space:pre;margin:0}
+.code-card .kw{color:#cba6f7}.code-card .fn{color:#89b4fa}.code-card .str{color:#a6e3a1}.code-card .cm{color:#6c7086;font-style:italic}.code-card .num{color:#fab387}.code-card .op{color:#89dceb}.code-card .bi{color:#cdd6f4}.code-card .ex{color:#f38ba8}
+
+/* ===== Slide 1: Title ===== */
+.slide-title{background:var(--cream)}
+.slide-title .title-box{text-align:center;z-index:2;position:relative}
+.slide-title h1{color:var(--text-dark);margin-bottom:12px;font-size:clamp(3rem,6.5vw,6rem)}
+.slide-title .subtitle{font-family:var(--font-body);font-weight:600;font-size:clamp(1rem,1.8vw,1.4rem);color:var(--text-muted);margin-top:16px;line-height:1.75}
+.slide-title .badge-row{display:flex;gap:12px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+.slide-title .badge:nth-child(1){background:var(--butter)}.slide-title .badge:nth-child(2){background:var(--mint)}
+.slide-title .deco-daisy-tl{top:-30px;left:-30px;width:220px;height:220px}
+.slide-title .deco-daisy-br{bottom:10px;right:-30px;width:210px;height:210px}
+.slide-title .deco-star-1{top:12%;left:6%;width:90px;height:90px}
+.slide-title .deco-star-2{bottom:18%;left:10%;width:70px;height:70px}
+.slide-title .deco-star-3{top:18%;right:8%;width:80px;height:80px}
+
+/* ===== Welcome frame ===== */
+.welcome-frame{width:100%;max-width:1100px;position:relative;z-index:2}
+.welcome-header{background:var(--mint);border:var(--border-width) solid var(--border);border-bottom:none;border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:16px 32px;text-align:center}
+.welcome-header h2{font-size:clamp(1.4rem,2.5vw,2rem);color:var(--text-dark)}
+.welcome-body{background:#fff;border:var(--border-width) solid var(--border);border-radius:0 0 var(--radius-lg) var(--radius-lg);padding:28px 42px;box-shadow:var(--shadow)}
+.welcome-list{list-style:none;display:flex;flex-direction:column;gap:14px}
+.welcome-list li{font-size:clamp(1rem,1.5vw,1.2rem);font-weight:600;padding-left:36px;position:relative;line-height:1.75}
+.welcome-list li::before{content:"";position:absolute;left:0;top:6px;width:20px;height:20px;background:var(--butter);border:2px solid var(--border);border-radius:50%}
+
+/* ===== Quote box ===== */
+.quote-box{background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius-lg);padding:30px 44px;box-shadow:var(--shadow);max-width:950px;width:100%;z-index:2;position:relative}
+.quote-mark{font-family:var(--font-display);font-size:3.5rem;line-height:1;color:var(--soft-pink);margin-bottom:6px}
+.quote-text{font-family:var(--font-body);font-size:clamp(1rem,1.6vw,1.3rem);line-height:1.7;color:var(--text-dark);font-weight:600;margin-bottom:10px}
+
+/* ===== Tip box ===== */
+.tip-box{background:var(--butter);border:var(--border-width) solid var(--border);border-radius:var(--radius);padding:14px 22px;box-shadow:var(--shadow-sm);width:100%;max-width:1000px;z-index:2;position:relative;margin-top:12px}
+.tip-box p{font-size:1rem;font-weight:700;color:var(--text-dark);line-height:1.65}
+.tip-box.tip-pink{background:var(--soft-pink)}
+.tip-box.tip-mint{background:var(--mint)}
+.tip-box.tip-coral{background:#fff0f0;border-color:#f38ba8}
+
+/* ===== Process Flow ===== */
+.process-flow{display:flex;align-items:flex-start;justify-content:center;gap:14px;width:100%;max-width:1150px;z-index:2;position:relative;flex-wrap:wrap}
+.process-step{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;min-width:140px}
+.process-arrow{font-family:var(--font-display);font-size:2rem;color:var(--border);margin-top:28px;flex-shrink:0}
+.step-circle{width:96px;height:96px;border-radius:50%;border:var(--border-width) solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.9rem;color:#fff;box-shadow:var(--shadow-sm);flex-shrink:0}
+.step-circle.s1{background:var(--coral)}.step-circle.s2{background:var(--turquoise)}.step-circle.s3{background:var(--lavender)}
+.step-title{font-family:var(--font-display);font-size:1.2rem}
+.step-desc{font-size:.98rem;font-weight:600;color:var(--text-muted);line-height:1.7;max-width:220px}
+
+/* ===== Mode Table ===== */
+.mode-table-wrap{width:100%;max-width:1100px;z-index:2;position:relative;overflow-x:auto}
+.mode-table{width:100%;border-collapse:separate;border-spacing:0;border:var(--border-width) solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);font-size:1rem;background:var(--cream)}
+.mode-table th{background:var(--lavender);color:#fff;font-family:var(--font-display);font-size:1.05rem;padding:14px 16px;text-align:center;border-bottom:var(--border-width) solid var(--border);background:var(--mint)}
+.mode-table td{padding:11px 16px;text-align:center;border-bottom:2px solid #e0d8c8;font-weight:500;line-height:1.6}
+.mode-table tr:last-child td{border-bottom:none}
+.mode-table tr:nth-child(even){background:rgba(212,165,232,.15)}
+.mode-table .mode-code{font-family:'Consolas',monospace;font-weight:700;color:var(--coral);font-size:1.05rem}
+
+/* ===== Compare cards ===== */
+.compare-wrap{display:flex;gap:26px;width:100%;max-width:1150px;z-index:2;position:relative;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+.compare-card{flex:1;min-width:320px;max-width:520px}
+.compare-header{text-align:center;padding:12px 20px;font-family:var(--font-display);font-size:1.3rem;border-bottom:var(--border-width) solid var(--border)}
+.compare-body{padding:16px 20px}
+.compare-body p{line-height:1.65;font-weight:500;font-size:1rem}
+
+/* ===== Pointer Animation ===== */
+.pointer-demo{background:#fff;border:var(--border-width) solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);max-width:1100px;width:100%;z-index:2;position:relative;padding:24px 32px}
+.pointer-demo h3{font-size:1.2rem;margin-bottom:14px}
+.pointer-file{font-family:'Consolas',monospace;font-size:clamp(1.1rem,1.6vw,1.4rem);line-height:2.2;display:flex;flex-wrap:wrap;gap:0;margin-bottom:18px;position:relative;padding:10px 4px;border:2px dashed #ccc;border-radius:12px;background:#fafafa}
+.pointer-char{display:inline-block;width:1.2em;text-align:center;position:relative;padding:2px 1px;border-radius:4px;transition:all .4s}
+.pointer-char.read{background:var(--mint);color:#000;font-weight:700}
+.pointer-char.current{background:var(--coral);color:#fff;font-weight:700;transform:scale(1.15);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.pointer-info{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px}
+.pointer-info .info-tag{background:var(--lavender);border:2px solid var(--border);border-radius:8px;padding:4px 14px;font-family:'Consolas',monospace;font-weight:700;font-size:.95rem}
+.pointer-info .info-result{font-weight:600;font-size:1rem}
+.pointer-btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.pointer-btn{background:var(--mint);border:var(--border-width) solid var(--border);border-radius:12px;padding:8px 20px;font-family:var(--font-display);font-size:1rem;cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm)}
+.pointer-btn:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--border)}
+.pointer-btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--border)}
+.pointer-btn.reset{background:var(--soft-pink)}
+
+/* ===== Colored slide backgrounds ===== */
+.slide-turquoise{background:var(--turquoise)}
+.slide-turquoise h2{color:#fff;text-shadow:3px 3px 0 var(--border)}
+.slide-soft-pink{background:var(--soft-pink)}
+.slide-soft-pink h2{color:var(--text-dark);text-shadow:2px 2px 0 rgba(0,0,0,.12)}
+.slide-butter{background:var(--butter)}
+.slide-lavender{background:var(--lavender)}
+.slide-lavender h2{color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.2)}
+.slide-sky{background:var(--sky)}
+.slide-sky h2{color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.2)}
+.slide-peach{background:var(--peach)}
+.slide-mint-bg{background:var(--mint)}
+.slide-mint-bg h2{color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.15)}
+.slide-coral-bg{background:var(--coral)}
+.slide-coral-bg h2{color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.2)}
+
+/* ===== Error code highlight ===== */
+.error-card{background:#1e1e2e;border:var(--border-width) solid #f38ba8;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 24px;width:100%;max-width:900px;overflow-x:auto;z-index:2;position:relative}
+.error-card pre{font-family:'Consolas','Courier New',monospace;font-size:clamp(.85rem,1.15vw,1rem);line-height:1.6;color:#cdd6f4;white-space:pre;margin:0}
+.error-line{background:rgba(243,139,168,.15);display:block;margin:0 -24px;padding:0 24px;border-left:4px solid #f38ba8}
+
+/* ===== Responsive ===== */
+@media(max-width:768px){
+  .slide{padding:22px 18px}
+  .process-flow{flex-direction:column;align-items:center}
+  .process-arrow{transform:rotate(90deg);margin:0}
+  .compare-wrap{flex-direction:column;align-items:center}
+  .nav-dots{display:none}
+  .deco{opacity:.5}
+  .code-card pre{font-size:.7rem}
+  .mode-table{font-size:.82rem}
+}
+</style>
+</head>
+<body>
+
+<div class="slides-container" id="slideContainer">
+
+<!-- ====== SLIDE 1: 封面 ====== -->
+<section class="slide slide-title" id="slide-1">
+  <div class="deco deco-daisy-tl"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><style>.cls-1{fill:#FCDF6C}.cls-2{fill:none;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}.cls-3{fill:#FFFFFF;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}</style><path class="cls-3" d="m66.6 53.8-5.9-13.8c-2.2-5.9-4.6-17.9-1.7-26.2 1.7-4.9 6.7-11.4 15.4-11.4 8.7-.2 13.4 4.6 15.7 8.6 4.8 8.1 2.5 20.3-.1 27.7l-6.8 15.1"></path><path class="cls-3" d="m92.1 115.2c1.3 5.8 1.9 13.8-.2 19.9-1.9 5.1-6.4 12.5-16.9 12.5-8.4 0-14.9-5.3-16.8-13.1-1.7-7-.6-15.2 1.7-22l6.7-16.4"></path><ellipse class="cls-3" cx="75.1" cy="75" rx="22.5" ry="22.9"></ellipse><path class="cls-1" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"></path><path class="cls-2" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"></path></svg></div>
+  <div class="deco deco-daisy-br"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><style>.cls-1{fill:#FFCBA4}.cls-3{fill:#FFFFFF;stroke:#232323;stroke-width:2.0745;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10}</style><path class="cls-3" d="m66.6 53.8-5.9-13.8c-2.2-5.9-4.6-17.9-1.7-26.2 1.7-4.9 6.7-11.4 15.4-11.4 8.7-.2 13.4 4.6 15.7 8.6 4.8 8.1 2.5 20.3-.1 27.7l-6.8 15.1"></path><path class="cls-3" d="m92.1 115.2c1.3 5.8 1.9 13.8-.2 19.9-1.9 5.1-6.4 12.5-16.9 12.5-8.4 0-14.9-5.3-16.8-13.1-1.7-7-.6-15.2 1.7-22l6.7-16.4"></path><ellipse class="cls-3" cx="75.1" cy="75" rx="22.5" ry="22.9"></ellipse><path class="cls-1" d="m75.1 52.1c-10.9 0-22.6 8.9-22.6 23 0 9.3 7 22.1 22.6 22.1 11.7 0 22.5-8.7 22.5-21.9 0-11.1-9.3-23.2-22.5-23.2z"></path></svg></div>
+  <div class="deco deco-star-1"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#000" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"></path></svg></div>
+  <div class="deco deco-star-2"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#A8E6CF" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"></path></svg></div>
+  <div class="deco deco-star-3"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FDE366" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"></path></svg></div>
+  <div class="title-box">
+    <h1>Python 读文本文件</h1>
+    <p class="subtitle">从文件中读取数据，让程序"看到"硬盘上的内容</p>
+    <div class="badge-row">
+      <span class="badge">读文本文件操作</span>
+      <span class="badge">案例：读出学生信息</span>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SLIDE 2: 学习目标 ====== -->
+<section class="slide" id="slide-2" style="background:var(--cream)">
+  <div class="deco" style="top:6%;right:6%;width:80px;height:80px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#FBB0C7" stroke="#000" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"></path></svg></div>
+  <div class="welcome-frame">
+    <div class="welcome-header"><h2>📋 学习目标</h2></div>
+    <div class="welcome-body">
+      <ul class="welcome-list">
+        <li>掌握 <strong>read()</strong> 函数三种用法：读全部、读指定字符数、逐字符读</li>
+        <li>掌握 <strong>readline()</strong> 逐行读取、<strong>readlines()</strong> 一次读取所有行</li>
+        <li>理解<strong>文件位置指针</strong>，掌握指针到末尾返回空串 <code>""</code></li>
+        <li>掌握 <strong>strip("\n")</strong> 去除换行符，配合 <strong>split()</strong> 提取字段</li>
+        <li>能从 students.txt 中读出学生信息并格式化输出、按条件查询</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SLIDE 3: 导入新课 ====== -->
+<section class="slide slide-butter" id="slide-3">
+  <h2 style="margin-bottom:24px;position:relative;z-index:2;text-shadow:2px 2px 0 var(--border)">导入新课</h2>
+  <div style="display:flex;gap:22px;width:100%;max-width:1100px;z-index:2;position:relative;align-items:flex-start;flex-wrap:wrap;justify-content:center">
+    <div style="flex:1;min-width:380px;max-width:620px">
+      <div class="quote-box" style="text-align:left;margin:0">
+        <div class="quote-mark">"</div>
+        <p class="quote-text" style="text-align:left">
+          上节课我们把 5 位同学的信息写进了 <strong>students.txt</strong>。<br>
+          现在辅导员要查<strong>王五的手机号</strong>——文件就在那里，怎么把内容<strong>读出来</strong>？
+        </p>
+        <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <span class="badge" style="background:var(--soft-pink)">写文件 → "w" 模式</span>
+          <span style="font-family:var(--font-display);font-size:1.6rem">→</span>
+          <span class="badge" style="background:var(--mint)">读文件 → "r" 模式</span>
+        </div>
+        <div class="code-card" style="margin-top:20px;max-width:700px">
+          <pre><span class="cm"># 回顾：上节课写文件的3行代码</span>
+<span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\students.txt"</span>, <span class="str">"w"</span>)
+<span class="fn">f</span>.<span class="fn">write</span>(<span class="str">"2024001  张三   13800138000\n"</span>)
+<span class="fn">f</span>.<span class="fn">close</span>()</pre>
+        </div>
+      </div>
+    </div>
+    <div style="flex:0 0 auto;max-width:340px;display:flex;align-items:center;justify-content:center">
+      <img src="ppt-images/A_cute_flat_illustration_of_a__2026-06-16T07-20-30.png" alt="辅导员查学生名单" style="width:100%;border-radius:var(--radius);border:var(--border-width) solid var(--border);box-shadow:var(--shadow)">
+    </div>
+  </div>
+  <div class="deco" style="top:8%;left:5%;width:80px;height:80px"><svg viewBox="0 0 100 98.6" xmlns="http://www.w3.org/2000/svg"><path fill="#A8E6CF" stroke="#2D2D2D" stroke-width="2.4166" stroke-miterlimit="10" d="m57.7 7.8 8.3 19.1c.5 1.3 1.5 2.1 2.8 2.3l21.5 2.2c6.4.8 9.4 8.3 5.3 13.7l-16.2 15.2c-1 .9-1.5 2.5-1.2 4.2l4.3 21.1c.9 6.2-4.9 11.6-12 8.7l-18.1-10.2c-1.4-.8-3.3-.8-4.8 0l-17.8 10.2c-6 2.9-13.2-.6-12.7-8l4.5-21.3c.3-1.7-.1-3.5-1.3-4.5l-15.2-13.5c-4.5-4.3-3.6-13.6 4.2-15.6l21.5-2.2c1.3-.1 2.3-.9 2.9-2.3l8.7-19.1c2.7-6 11.5-7.7 15.3 0z"></path></svg></div>
+</section>
+
+<!-- ====== SLIDE 4: 文件位置指针（纯介绍）====== -->
+<section class="slide slide-sky" id="slide-4">
+  <h2 style="margin-bottom:18px;position:relative;z-index:2">📍 文件位置指针</h2>
+  <div style="display:flex;gap:22px;width:100%;max-width:1150px;z-index:2;position:relative;align-items:flex-start;flex-wrap:wrap;justify-content:center">
+    <div style="flex:1;min-width:380px;max-width:650px;display:flex;flex-direction:column;gap:14px">
+      <div class="mode-table-wrap">
+        <table class="mode-table" style="font-size:.95rem">
+          <thead>
+            <tr><th>操作</th><th>指针位置变化</th><th>类比</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mode-code">open()</td><td>指向开头（第一个字符前）</td><td>📖 翻开书，手指放在第一个字</td></tr>
+            <tr><td class="mode-code">read()</td><td>移到末尾</td><td>📖 一口气读完，手指到最后一行</td></tr>
+            <tr><td class="mode-code">read(n)</td><td>往后移 n 个字符</td><td>📖 读了 n 个字，手指跟着移 n 格</td></tr>
+            <tr><td class="mode-code">末尾再读</td><td>不动，返回 <code>""</code></td><td>📖 读完了再往后翻，没了！</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tip-box tip-mint" style="margin-top:0">
+        <p>💡 就像在书上用手指跟着文字一行行读——从第一个字开始，读完往后移，读到最后再往后，什么都没有了，返回 <code>""</code>。</p>
+      </div>
+    </div>
+    <div style="flex:0 0 auto;max-width:340px;display:flex;align-items:center;justify-content:center">
+      <img src="ppt-images/A_cute_flat_illustration_of_a__2026-06-16T07-20-20.png" alt="手指按在书上读书" style="width:100%;border-radius:var(--radius);border:var(--border-width) solid var(--border);box-shadow:var(--shadow)">
+    </div>
+  </div>
+</section>
+
+<!-- ====== SLIDE 5: read() 读取全部 ====== -->
+<section class="slide slide-soft-pink" id="slide-5">
+  <h2 style="margin-bottom:18px;position:relative;z-index:2">📖 read() — 读取全部内容</h2>
+  <p style="z-index:2;position:relative;margin-bottom:16px;max-width:950px;font-weight:600">辅导员把签到文件一次性全打印出来 → <code>f.read()</code> 最方便</p>
+  <div class="code-card" style="max-width:900px">
+    <pre><span class="cm"># 写文件（3行，准备数据）</span>
+<span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"w"</span>)
+<span class="fn">f</span>.<span class="fn">write</span>(<span class="str">"Hello!\nPython!"</span>)
+<span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="kw">def</span> <span class="fn">read_file</span>():
+    <span class="fn">f</span> = <span class="kw">None</span>
+    <span class="kw">try</span>:
+        <span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"r"</span>)
+        <span class="fn">content</span> = <span class="fn">f</span>.<span class="fn">read</span>()          <span class="cm"># 读取全部内容，返回一个字符串</span>
+        <span class="fn">print</span>(<span class="fn">content</span>)
+        <span class="fn">print</span>(<span class="str">"字符串长度："</span>, <span class="fn">len</span>(<span class="fn">content</span>))
+    <span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="str">"读取失败："</span>, <span class="fn">e</span>)
+    <span class="kw">finally</span>:
+        <span class="kw">if</span> <span class="fn">f</span>:
+            <span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="fn">read_file</span>()</pre>
+  </div>
+  <div class="tip-box" style="max-width:900px">
+    <p>输出：<code>Hello! Python! 字符串长度：14</code>（\n 占1个字符）</p>
+  </div>
+</section>
+
+
+<!-- ====== SLIDE 6a: read(n) 读取指定字符数 ====== -->
+<section class="slide slide-peach" id="slide-6">
+  <h2 style="margin-bottom:16px;position:relative;z-index:2">📏 read(n) — 读取指定字符数</h2>
+  <p style="z-index:2;position:relative;margin-bottom:14px;max-width:950px;font-weight:600">班长检查作业，每次先看前几个字判断对不对 → <code>read(n)</code> 每次只读 n 个字符</p>
+  <div class="code-card" style="max-width:950px">
+    <pre><span class="cm"># 写文件</span>
+<span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"w"</span>)
+<span class="fn">f</span>.<span class="fn">write</span>(<span class="str">"Hello!\nPython!"</span>)
+<span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="kw">def</span> <span class="fn">read_file</span>():
+    <span class="fn">f</span> = <span class="kw">None</span>
+    <span class="kw">try</span>:
+        <span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"r"</span>)
+        <span class="fn">part1</span> = <span class="fn">f</span>.<span class="fn">read</span>(<span class="num">3</span>)
+        <span class="fn">print</span>(<span class="str">"前3个字符："</span>, <span class="fn">part1</span>, <span class="str">"  长度："</span>, <span class="fn">len</span>(<span class="fn">part1</span>))
+        <span class="fn">part2</span> = <span class="fn">f</span>.<span class="fn">read</span>(<span class="num">4</span>)
+        <span class="fn">print</span>(<span class="str">"再读4个字符："</span>, <span class="fn">part2</span>, <span class="str">"  长度："</span>, <span class="fn">len</span>(<span class="fn">part2</span>))
+        <span class="fn">rest</span> = <span class="fn">f</span>.<span class="fn">read</span>(<span class="num">999</span>)          <span class="cm"># 超过剩余长度，只返回剩余内容</span>
+        <span class="fn">print</span>(<span class="str">"剩余内容："</span>, <span class="fn">rest</span>,   <span class="str">"  长度："</span>, <span class="fn">len</span>(<span class="fn">rest</span>))
+        <span class="fn">empty</span> = <span class="fn">f</span>.<span class="fn">read</span>(<span class="num">5</span>)           <span class="cm"># 指针已到末尾，返回空串</span>
+        <span class="fn">print</span>(<span class="str">"末尾再读："</span>, <span class="fn">repr</span>(<span class="fn">empty</span>), <span class="str">"  长度："</span>, <span class="fn">len</span>(<span class="fn">empty</span>))
+    <span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="str">"读取失败："</span>, <span class="fn">e</span>)
+    <span class="kw">finally</span>:
+        <span class="kw">if</span> <span class="fn">f</span>:
+            <span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="fn">read_file</span>()</pre>
+  </div>
+  <div class="tip-box tip-coral" style="max-width:950px">
+    <p>⚠️ <code>read(999)</code> 超过剩余字符数不报错，只返回剩余内容；指针到末尾后再读，返回 <code>""</code>，<code>len()</code> 为 0。</p>
+  </div>
+</section>
+
+<!-- ====== SLIDE 7a: 指针移动演示 ====== -->
+<section class="slide slide-peach" id="slide-7">
+  <h2 style="margin-bottom:20px;position:relative;z-index:2">🎬 指针移动演示</h2>
+  <p style="z-index:2;position:relative;margin-bottom:16px;max-width:950px;font-weight:600">文件内容：<code>"Hello!\nPython!"</code>（共14个字符），点击"下一步"观察指针变化 ↓</p>
+  <div class="pointer-demo" id="pointerDemo">
+    <div class="pointer-file" id="pointerFile"><span class="pointer-char read">H</span><span class="pointer-char read">e</span><span class="pointer-char read">l</span><span class="pointer-char current">l</span><span class="pointer-char current">o</span><span class="pointer-char current">!</span><span class="pointer-char current">↵</span><span class="pointer-char">P</span><span class="pointer-char">y</span><span class="pointer-char">t</span><span class="pointer-char">h</span><span class="pointer-char">o</span><span class="pointer-char">n</span><span class="pointer-char">!</span></div>
+    <div class="pointer-info" id="pointerInfo">
+      <span class="info-tag">当前操作</span>
+      <span class="info-result" id="pointerAction">f.read(4) 再读4个字符 → 指针移到位置7，返回 "lo!\n"</span>
+    </div>
+    <div class="pointer-btns">
+      <button class="pointer-btn" onclick="pointerNext()">下一步 →</button>
+      <button class="pointer-btn reset" onclick="pointerReset()">重置</button>
+    </div>
+  </div>
+  <script>
+  const FILE_CONTENT = "Hello!\nPython!";
+  const STEPS = [
+    {action: 'open() 打开文件', read: 0, desc: '指针在开头（位置0）'},
+    {action: 'f.read(3) 读取3个字符', read: 3, result: '"Hel"', desc: '指针移到位置3'},
+    {action: 'f.read(4) 再读4个字符', read: 7, result: '"lo!\\n"', desc: '指针移到位置7'},
+    {action: 'f.read(999) 读剩余', read: 14, result: '"Python!"', desc: '超过剩余长度不报错，返回剩余'},
+    {action: 'f.read(5) 末尾再读', read: 14, result: '""（空串）', desc: '指针到末尾，返回空串，len=0'}
+  ];
+  let stepIdx = 0;
+  function renderPointer() {
+    const file = document.getElementById('pointerFile');
+    const actionEl = document.getElementById('pointerAction');
+    file.innerHTML = '';
+    const prevRead = stepIdx > 0 ? STEPS[stepIdx - 1].read : 0;
+    const currRead = STEPS[stepIdx] ? STEPS[stepIdx].read : prevRead;
+    for (let i = 0; i < FILE_CONTENT.length; i++) {
+      const span = document.createElement('span');
+      span.className = 'pointer-char';
+      span.textContent = FILE_CONTENT[i] === '\n' ? '↵' : FILE_CONTENT[i];
+      if (i < prevRead) span.classList.add('read');
+      if (i >= prevRead && i < currRead) span.classList.add('current');
+      file.appendChild(span);
+    }
+    if (stepIdx < STEPS.length) {
+      actionEl.textContent = STEPS[stepIdx].action + ' → ' + STEPS[stepIdx].desc + (STEPS[stepIdx].result ? '，返回 ' + STEPS[stepIdx].result : '');
+    }
+  }
+  function pointerNext() {
+    if (stepIdx < STEPS.length) { stepIdx++; renderPointer(); }
+  }
+  function pointerReset() { stepIdx = 0; renderPointer(); }
+  renderPointer();
+  </script>
+</section>
+
+<!-- ====== SLIDE 8: read(1) 逐字符读 ====== -->
+<section class="slide slide-lavender" id="slide-8">
+  <h2 style="margin-bottom:16px;position:relative;z-index:2">🔤 read(1) — 逐字符读取</h2>
+  <p style="z-index:2;position:relative;margin-bottom:14px;max-width:950px;font-weight:600;color:#fff">老师在线批改作文，逐字检查 → <code>read(1)</code> 每次读1个字符</p>
+  <div class="code-card" style="max-width:900px">
+    <pre><span class="cm"># 写文件</span>
+<span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"w"</span>)
+<span class="fn">f</span>.<span class="fn">write</span>(<span class="str">"Hello!\nPython!"</span>)
+<span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="kw">def</span> <span class="fn">read_file</span>():
+    <span class="fn">f</span> = <span class="kw">None</span>
+    <span class="kw">try</span>:
+        <span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"r"</span>)
+        <span class="fn">char</span> = <span class="fn">f</span>.<span class="fn">read</span>(<span class="num">1</span>)
+        <span class="kw">while</span> <span class="fn">char</span>:                 <span class="cm"># char 为空串 "" 时循环结束</span>
+            <span class="fn">print</span>(<span class="fn">char</span>, <span class="fn">end</span>=<span class="str">""</span>)
+            <span class="fn">char</span> = <span class="fn">f</span>.<span class="fn">read</span>(<span class="num">1</span>)
+    <span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="str">"读取失败："</span>, <span class="fn">e</span>)
+    <span class="kw">finally</span>:
+        <span class="kw">if</span> <span class="fn">f</span>:
+            <span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="fn">read_file</span>()</pre>
+  </div>
+  <div class="tip-box" style="max-width:900px">
+    <p>💡 <code>while char:</code> —— 当 <code>char</code> 为空串 <code>""</code> 时，条件为 <code>False</code>，循环自动结束。</p>
+  </div>
+</section>
+
+<!-- ====== SLIDE 11: 课堂互动改错题 ====== -->
+<section class="slide slide-peach" id="slide-9" style="background:var(--peach)">
+  <h2 style="margin-bottom:16px;position:relative;z-index:2">🎯 课堂互动：改错题</h2>
+  <div style="display:flex;gap:22px;width:100%;max-width:1100px;z-index:2;position:relative;align-items:center;flex-wrap:wrap;justify-content:center">
+    <div style="flex:1;min-width:400px;max-width:650px;display:flex;flex-direction:column;gap:14px">
+      <p style="font-weight:600;margin:0">请找出下面代码的 <strong>2 处错误</strong>：</p>
+      <div class="error-card" style="margin:0">
+        <pre><span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"r"</span>)
+<span class="fn">content</span> = <span class="fn">f</span>.<span class="fn">read</span>()
+<span class="fn">print</span>(<span class="fn">content</span>)
+<span class="cm"># 想再读一次</span>
+<span class="fn">content2</span> = <span class="fn">f</span>.<span class="fn">read</span>()
+<span class="fn">print</span>(<span class="str">"第二次读取："</span>, <span class="fn">content2</span>)</pre>
+      </div>
+    </div>
+    <div style="flex:0 0 auto;max-width:320px;display:flex;align-items:center;justify-content:center">
+      <img src="ppt-images/A_cute_flat_illustration_of_a__2026-06-16T07-20-31.png" alt="学生挠头看代码" style="width:100%;border-radius:var(--radius);border:var(--border-width) solid var(--border);box-shadow:var(--shadow)">
+    </div>
+  </div>
+</section>
+
+<!-- ====== SLIDE 9: readline() ====== -->
+<section class="slide slide-butter" id="slide-10">
+  <h2 style="margin-bottom:16px;position:relative;z-index:2;text-shadow:2px 2px 0 var(--border)">📝 readline() — 逐行读取</h2>
+  <p style="z-index:2;position:relative;margin-bottom:14px;max-width:950px;font-weight:600">值日生逐行核对宿舍卫生记录，念一行记一行 → <code>readline()</code> 每次只读一行</p>
+  <div class="code-card" style="max-width:900px">
+    <pre><span class="cm"># 写文件</span>
+<span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"w"</span>)
+<span class="fn">f</span>.<span class="fn">write</span>(<span class="str">"Hello!\nPython!"</span>)
+<span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="kw">def</span> <span class="fn">read_file</span>():
+    <span class="fn">f</span> = <span class="kw">None</span>
+    <span class="kw">try</span>:
+        <span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"r"</span>)
+        <span class="fn">result</span> = <span class="str">""</span>
+        <span class="fn">line</span> = <span class="fn">f</span>.<span class="fn">readline</span>()
+        <span class="kw">while</span> <span class="fn">line</span>:                 <span class="cm"># line 为 "" 时循环结束</span>
+            <span class="fn">result</span> = <span class="fn">result</span> + <span class="fn">line</span>
+            <span class="fn">line</span> = <span class="fn">f</span>.<span class="fn">readline</span>()
+        <span class="fn">print</span>(<span class="fn">result</span>)
+    <span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="str">"读取失败："</span>, <span class="fn">e</span>)
+    <span class="kw">finally</span>:
+        <span class="kw">if</span> <span class="fn">f</span>:
+            <span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="fn">read_file</span>()</pre>
+  </div>
+  <div class="tip-box tip-mint" style="max-width:900px">
+    <p>💡 先把所有行拼接到 <code>result</code>，最后统一 <code>print(result)</code> 输出；<code>readline()</code> 每行末尾含 <code>\n</code>。</p>
+  </div>
+</section>
+<!-- ====== SLIDE 10: readlines() ====== -->
+<section class="slide slide-mint-bg" id="slide-11">
+  <h2 style="margin-bottom:16px;position:relative;z-index:2">📋 readlines() — 读取所有行</h2>
+  <p style="z-index:2;position:relative;margin-bottom:14px;max-width:950px;font-weight:600">辅导员拿到全班花名册，一次全存到程序里 → <code>readlines()</code> 一次性读进列表</p>
+  <div class="code-card" style="max-width:900px">
+    <pre><span class="cm"># 写文件</span>
+<span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"w"</span>)
+<span class="fn">f</span>.<span class="fn">write</span>(<span class="str">"Hello!\nPython!"</span>)
+<span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="kw">def</span> <span class="fn">read_file</span>():
+    <span class="fn">f</span> = <span class="kw">None</span>
+    <span class="kw">try</span>:
+        <span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\hello.txt"</span>, <span class="str">"r"</span>)
+        <span class="fn">lines</span> = <span class="fn">f</span>.<span class="fn">readlines</span>()       <span class="cm"># 返回列表，每个元素是一行（含\n）</span>
+        <span class="fn">print</span>(<span class="str">f"共读取 </span>{<span class="fn">len</span>(<span class="fn">lines</span>)}<span class="str"> 行"</span>)
+        <span class="fn">print</span>(<span class="fn">lines</span>)                <span class="cm"># 直接打印列表，可看到每行末尾有\n</span>
+        <span class="kw">for</span> <span class="fn">line</span> <span class="kw">in</span> <span class="fn">lines</span>:
+            <span class="fn">print</span>(<span class="fn">line</span>, <span class="fn">end</span>=<span class="str">""</span>)
+    <span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="str">"读取失败："</span>, <span class="fn">e</span>)
+    <span class="kw">finally</span>:
+        <span class="kw">if</span> <span class="fn">f</span>:
+            <span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="fn">read_file</span>()</pre>
+  </div>
+  <div class="tip-box" style="max-width:900px">
+    <p>输出：<code>共读取 2 行 ['Hello!\n', 'Python!'] Hello! Python!</code></p>
+  </div>
+</section>
+
+
+
+<!-- ====== SLIDE 12: 三种读取方法对比表 ====== -->
+<section class="slide slide-soft-pink" id="slide-12">
+  <h2 style="margin-bottom:20px;position:relative;z-index:2">📊 三种读取方法对比</h2>
+  <div style="display:flex;gap:22px;width:100%;max-width:1150px;z-index:2;position:relative;align-items:flex-start;flex-wrap:wrap;justify-content:center">
+    <div style="flex:1;min-width:420px;max-width:700px;display:flex;flex-direction:column;gap:14px">
+      <div class="mode-table-wrap" style="margin:0">
+        <table class="mode-table">
+          <thead>
+            <tr><th>方法</th><th>返回类型</th><th>一次读多少</th><th>末尾判断</th><th>适合场景</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mode-code">read()</td><td>字符串</td><td>全部内容</td><td>返回 <code>""</code></td><td>文件较小，一次性处理</td></tr>
+            <tr><td class="mode-code">read(n)</td><td>字符串</td><td>n 个字符</td><td>返回 <code>""</code></td><td>逐字符/分段读</td></tr>
+            <tr><td class="mode-code">readline()</td><td>字符串</td><td>一行（含 <code>\n</code>）</td><td>返回 <code>""</code></td><td>逐行处理</td></tr>
+            <tr><td class="mode-code">readlines()</td><td>列表</td><td>全部行（每行含 <code>\n</code>）</td><td>列表为空</td><td>对所有行做集合操作</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tip-box" style="margin:0;max-width:700px">
+        <p>🔑 共同规律：读到文件末尾都返回空字符串 <code>""</code>（readlines 返回空列表 <code>[]</code>），不会报错！</p>
+      </div>
+    </div>
+    <div style="flex:0 0 auto;max-width:320px;display:flex;align-items:center;justify-content:center">
+      <img src="ppt-images/A_cute_flat_illustration_of_th_2026-06-16T07-20-30.png" alt="三种读取方法类比：倒水、吸管、抽吸管" style="width:100%;border-radius:var(--radius);border:var(--border-width) solid var(--border);box-shadow:var(--shadow)">
+    </div>
+  </div>
+</section>
+
+<!-- ====== SLIDE 13: 案例背景 students.txt ====== -->
+<section class="slide slide-butter" id="slide-13">
+  <h2 style="margin-bottom:16px;position:relative;z-index:2;text-shadow:2px 2px 0 var(--border)">🎓 案例背景：students.txt</h2>
+  <div class="compare-wrap" style="align-items:flex-start">
+    <div class="code-card" style="max-width:520px">
+      <pre style="font-size:clamp(.9rem,1.2vw,1.05rem)"><span class="cm"># 上节课写入的 students.txt</span>
+学号      姓名   手机号
+-----------------------------------
+2024001  张三   13800138000
+2024002  李四   13900139000
+2024003  王五   15000150000
+2024004  赵六   18600186000
+2024005  孙七   13700137000</pre>
+    </div>
+    <div style="max-width:520px;z-index:2;display:flex;flex-direction:column;gap:16px">
+      <div class="tip-box tip-pink" style="margin-top:0">
+        <p>❓ 为什么这里要 <code>strip("\n")</code>？<br>
+        因为要对每行做 <code>split()</code> 拆字段——如果行末带着 <code>\n</code>，拆出的最后一个字段也带 <code>\n</code>，数据就脏了！</p>
+      </div>
+      <div class="tip-box tip-mint" style="margin-top:0">
+        <p>✅ 所以：<strong>处理真实数据时，先 <code>strip("\n")</code> 再 <code>split()</code></strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SLIDE 14: 案例一 readlines() ====== -->
+<section class="slide slide-sky" id="slide-14">
+  <h2 style="margin-bottom:14px;position:relative;z-index:2">案例一：readlines() 读所有学生</h2>
+  <div class="code-card" style="max-width:1050px">
+    <pre><span class="kw">def</span> <span class="fn">read_students</span>():
+    <span class="fn">f</span> = <span class="kw">None</span>
+    <span class="kw">try</span>:
+        <span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\students.txt"</span>, <span class="str">"r"</span>)
+        <span class="fn">lines</span> = <span class="fn">f</span>.<span class="fn">readlines</span>()
+        <span class="fn">print</span>(<span class="str">"===== 学生信息 ====="</span>)
+        <span class="kw">for</span> <span class="fn">line</span> <span class="kw">in</span> <span class="fn">lines</span>:
+            <span class="fn">line</span> = <span class="fn">line</span>.<span class="fn">strip</span>(<span class="str">"\n"</span>)   <span class="cm"># 去掉每行末尾的换行符</span>
+            <span class="fn">print</span>(<span class="fn">line</span>)
+        <span class="fn">print</span>(<span class="str">f"共 </span>{<span class="fn">len</span>(<span class="fn">lines</span>)}<span class="str"> 条记录"</span>)
+    <span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="str">"读取失败："</span>, <span class="fn">e</span>)
+    <span class="kw">finally</span>:
+        <span class="kw">if</span> <span class="fn">f</span>:
+            <span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="fn">read_students</span>()</pre>
+  </div>
+  <div class="tip-box" style="max-width:1050px">
+    <p><code>strip("\n")</code> 只去掉 <code>\n</code>；<code>strip()</code> 不加参数可去掉首尾所有空白，更常用。</p>
+  </div>
+</section>
+
+<!-- ====== SLIDE 15: 案例二 readline() 跳过分隔线 ====== -->
+<section class="slide slide-mint-bg" id="slide-15">
+  <h2 style="margin-bottom:14px;position:relative;z-index:2">案例二：readline() 跳过分隔线</h2>
+  <p style="z-index:2;position:relative;margin-bottom:12px;max-width:950px;font-weight:600;color:#fff">逐行读取，遇到分隔线直接跳过</p>
+  <div class="code-card" style="max-width:1050px">
+    <pre><span class="kw">def</span> <span class="fn">read_students</span>():
+    <span class="fn">f</span> = <span class="kw">None</span>
+    <span class="kw">try</span>:
+        <span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\students.txt"</span>, <span class="str">"r"</span>)
+        <span class="fn">line</span> = <span class="fn">f</span>.<span class="fn">readline</span>()
+        <span class="kw">while</span> <span class="fn">line</span>:
+            <span class="fn">line</span> = <span class="fn">line</span>.<span class="fn">strip</span>(<span class="str">"\n"</span>)
+            <span class="kw">if</span> <span class="fn">line</span> <span class="kw">and not</span> <span class="fn">line</span>.<span class="fn">startswith</span>(<span class="str">"-"</span>):  <span class="cm"># 跳过分隔线</span>
+                <span class="fn">print</span>(<span class="fn">line</span>)
+            <span class="fn">line</span> = <span class="fn">f</span>.<span class="fn">readline</span>()
+    <span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="str">"读取失败："</span>, <span class="fn">e</span>)
+    <span class="kw">finally</span>:
+        <span class="kw">if</span> <span class="fn">f</span>:
+            <span class="fn">f</span>.<span class="fn">close</span>()
+
+<span class="fn">read_students</span>()</pre>
+  </div>
+  <div class="tip-box" style="max-width:1050px">
+    <p><code>startswith("-")</code> 判断行是否以 <code>-</code> 开头（分隔线），是则跳过。</p>
+  </div>
+</section>
+
+<!-- ====== SLIDE 16: 案例三 提取字段+查询 ====== -->
+<section class="slide slide-peach" id="slide-16">
+  <h2 style="margin-bottom:12px;position:relative;z-index:2">案例三：提取字段 + 按姓名查询</h2>
+  <div style="display:flex;gap:18px;width:100%;max-width:1150px;z-index:2;flex-wrap:wrap;justify-content:center">
+    <div class="code-card" style="max-width:560px;flex:1">
+      <pre style="font-size:clamp(.8rem,1vw,.95rem)"><span class="kw">def</span> <span class="fn">read_students</span>():
+    <span class="str">"""解析 students.txt"""</span>
+    <span class="fn">f</span> = <span class="kw">None</span>
+    <span class="fn">students</span> = []
+    <span class="kw">try</span>:
+        <span class="fn">f</span> = <span class="fn">open</span>(<span class="str">r"D:\students.txt"</span>, <span class="str">"r"</span>)
+        <span class="fn">lines</span> = <span class="fn">f</span>.<span class="fn">readlines</span>()
+        <span class="kw">for</span> <span class="fn">line</span> <span class="kw">in</span> <span class="fn">lines</span>:
+            <span class="fn">line</span> = <span class="fn">line</span>.<span class="fn">strip</span>(<span class="str">"\n"</span>)
+            <span class="kw">if</span> <span class="fn">line</span>.<span class="fn">startswith</span>(<span class="str">"学号"</span>) <span class="kw">or</span> \
+               <span class="fn">line</span>.<span class="fn">startswith</span>(<span class="str">"-"</span>) <span class="kw">or</span> \
+               <span class="fn">line</span> == <span class="str">""</span>:
+                <span class="kw">continue</span>
+            <span class="fn">parts</span> = <span class="fn">line</span>.<span class="fn">split</span>()
+            <span class="kw">if</span> <span class="fn">len</span>(<span class="fn">parts</span>) &gt;= <span class="num">3</span>:
+                <span class="fn">students</span>.<span class="fn">append</span>({
+                    <span class="str">"id"</span>: <span class="fn">parts</span>[<span class="num">0</span>],
+                    <span class="str">"name"</span>: <span class="fn">parts</span>[<span class="num">1</span>],
+                    <span class="str">"phone"</span>: <span class="fn">parts</span>[<span class="num">2</span>]
+                })
+    <span class="kw">except</span> <span class="ex">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="str">"读取失败："</span>, <span class="fn">e</span>)
+    <span class="kw">finally</span>:
+        <span class="kw">if</span> <span class="fn">f</span>:
+            <span class="fn">f</span>.<span class="fn">close</span>()
+    <span class="kw">return</span> <span class="fn">students</span></pre>
+    </div>
+    <div class="code-card" style="max-width:560px;flex:1">
+      <pre style="font-size:clamp(.8rem,1vw,.95rem)"><span class="kw">def</span> <span class="fn">query_student</span>(<span class="fn">students</span>, <span class="fn">target_name</span>):
+    <span class="str">"""按姓名查询手机号"""</span>
+    <span class="kw">for</span> <span class="fn">s</span> <span class="kw">in</span> <span class="fn">students</span>:
+        <span class="kw">if</span> <span class="fn">s</span>[<span class="str">"name"</span>] == <span class="fn">target_name</span>:
+            <span class="fn">print</span>(<span class="str">f"找到了！</span>{<span class="fn">target_name</span>}<span class="str">的手机号"</span>
+                   <span class="str">f"是：</span>{<span class="fn">s</span>[<span class="str">'phone'</span>]}<span class="str">"</span>)
+            <span class="kw">return</span>
+    <span class="fn">print</span>(<span class="str">f"未找到：</span>{<span class="fn">target_name</span>}<span class="str">"</span>)
+
+<span class="cm"># 主程序</span>
+<span class="fn">students</span> = <span class="fn">read_students</span>()
+<span class="kw">for</span> <span class="fn">s</span> <span class="kw">in</span> <span class="fn">students</span>:
+    <span class="fn">print</span>(<span class="str">f"学号：</span>{<span class="fn">s</span>[<span class="str">'id'</span>]}<span class="str">  "</span>
+           <span class="str">f"姓名：</span>{<span class="fn">s</span>[<span class="str">'name'</span>]}<span class="str">  "</span>
+           <span class="str">f"手机：</span>{<span class="fn">s</span>[<span class="str">'phone'</span>]}<span class="str">"</span>)
+<span class="fn">print</span>(<span class="str">f"共 </span>{<span class="fn">len</span>(<span class="fn">students</span>)}<span class="str"> 名学生"</span>)
+
+<span class="fn">query_student</span>(<span class="fn">students</span>, <span class="str">"王五"</span>)</pre>
+    </div>
+  </div>
+  <div class="tip-box tip-pink" style="max-width:1150px;margin-top:10px">
+    <p>🔑 流程：<code>strip("\n")</code> → <code>split()</code> → 存字典 → 按姓名检索。读取和查询拆成两个函数，职责分离。</p>
+  </div>
+</section>
+
+<!-- ====== SLIDE 17: 课堂小结 ====== -->
+<section class="slide" id="slide-17" style="background:var(--cream)">
+  <h2 style="margin-bottom:20px;position:relative;z-index:2">✅ 课堂小结</h2>
+  <div class="mode-table-wrap" style="z-index:2;position:relative;margin-bottom:18px">
+    <table class="mode-table">
+      <thead>
+        <tr><th>方法</th><th>语法</th><th>返回值</th><th>注意事项</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mode-code">read()</td><td>f.read()</td><td>全部内容字符串</td><td>末尾再读返回 <code>""</code></td></tr>
+        <tr><td class="mode-code">read(n)</td><td>f.read(10)</td><td>前n个字符</td><td>超出不报错；<code>len()</code> 查长度</td></tr>
+        <tr><td class="mode-code">readline()</td><td>f.readline()</td><td>一行（含 <code>\n</code>）</td><td>末尾返回 <code>""</code></td></tr>
+        <tr><td class="mode-code">readlines()</td><td>f.readlines()</td><td>所有行的列表</td><td>处理数据时需 <code>strip</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="tip-box tip-mint" style="max-width:1100px">
+    <p>📝 核心口诀：<br>
+    读文件用 <code>"r"</code> 模式；位置指针从头开始，读多少移多少，到末尾返回 <code>""</code>；<br>
+    处理真实数据时，先 <code>strip("\n")</code> 再 <code>split()</code>；打开放 <code>try</code>，关闭放 <code>finally</code>！</p>
+  </div>
+</section>
+
+</div><!-- end slides-container -->
+
+<!-- Navigation -->
+<div class="nav-dots" id="navDots"><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot active"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div><div class="nav-dot"></div></div>
+<div class="slide-counter" id="slideCounter">12 / 17</div>
+
+<script>
+const container = document.getElementById('slideContainer');
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('slideCounter');
+const dotsContainer = document.getElementById('navDots');
+
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot';
+  dot.addEventListener('click', () => slides[i].scrollIntoView({ behavior: 'smooth' }));
+  dotsContainer.appendChild(dot);
+});
+
+const dots = document.querySelectorAll('.nav-dot');
+const updateNav = () => {
+  const scrollTop = container.scrollTop;
+  const vh = window.innerHeight;
+  const idx = Math.round(scrollTop / vh);
+  dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+  counter.textContent = `${idx + 1} / ${slides.length}`;
+};
+container.addEventListener('scroll', updateNav);
+updateNav();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    const idx = Math.round(container.scrollTop / window.innerHeight);
+    if (idx < slides.length - 1) slides[idx + 1].scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault();
+    const idx = Math.round(container.scrollTop / window.innerHeight);
+    if (idx > 0) slides[idx - 1].scrollIntoView({ behavior: 'smooth' });
+  }
+});
+</script>
+
+
+</body></html>
